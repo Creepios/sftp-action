@@ -1,0 +1,41 @@
+name: 'SFTP'
+description: 'Upload files or directories via sftp and ssh'
+inputs:
+  host:
+    description: 'Host to login'
+    required: true
+    default: 'localhost'
+  port: 
+    description: 'Port to login'
+    required: false
+    default: '22'
+  username: 
+    description: 'Username to login'
+    required: true
+    default: 'root'
+  password: 
+    description: 'Passwort to login'
+    required: true
+    default: 'password'
+  localPath: 
+    description: 'Local file or directory'
+    required: true
+  remotePath: 
+    description: 'Remote file or directory path (file or directories will be created)'
+    required: true
+  agent: 
+    description: 'Path to ssh-agent'
+    required: false
+    default: 'process.env.SSH_AGENT'
+  privateKey: 
+    description: 'Path to key file or directly the key (via secret or paste)'
+    required: false
+  privateKeyIsFile: 
+    description: 'Define if private key is a local file or string'
+    required: false
+  passphrase: 
+    description: 'Define a passphrase for encrypted private keys'
+    required: false
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
