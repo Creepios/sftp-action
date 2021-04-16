@@ -1,6 +1,7 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
 const fs = require('fs');
+const path = require('path');
 
 let Client = require('ssh2-sftp-client');
 let sftp = new Client();
@@ -36,7 +37,14 @@ sftp.connect({
     privateKey: privateKey,
     passphrase: passphrase
 }).then(() => {
-    return sftp.put(localPath, remotePath);
+    console.log("Connection established.");
+    console.log("Current working directory: " + sftp.cwd())
+    if (localPath.extname == "") {
+        return sftp.uploadDir(localPath, remotePath);
+    } else {
+        return sftp.put(localPath, remotePath);
+    }
+    
 }).then(() => {
     return sftp.end();
 }).catch(err => {
