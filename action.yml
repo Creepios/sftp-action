@@ -1,7 +1,9 @@
 name: 'SFTP SSH Action'
 description: 'Upload files or directories via sftp and ssh'
-icon: 'upload'
-color: 'green'
+author: 'Creepios (Niklas R.) 
+branding:
+  icon: 'upload'
+  color: 'green'
 inputs:
   host:
     description: 'Host to login'
