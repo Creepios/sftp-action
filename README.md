@@ -28,7 +28,7 @@ This action can (currently only) upload files and directories over sftp with ssh
 **Optional** Path to key file or directly the key (via secret or paste).
 
 ### `privateKeyIsFile`
-**Optional** Define if private key is a local file or string.
+**Optional** Define if private key is a local file or string. Default `"false"`.
 
 ### `passphrase`
 **Optional** Define a passphrase for encrypted private keys.

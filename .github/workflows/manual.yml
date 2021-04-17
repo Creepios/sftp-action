@@ -15,7 +15,8 @@ jobs:
       with:
         host: ${{ secrets.ip }}
         port: 22
-        username: 'root'
-        password: ${{ secrets.root_user }}
+        username: 'github'
+        password: ''
+        privateKey: ${{ secrets.private_key }}
         localPath: './dist/index.js'
         remotePath: './'
