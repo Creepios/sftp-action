@@ -43,16 +43,20 @@ sftp.connect({
     if (fs.lstatSync(localPath).isDirectory()) {
         return sftp.uploadDir(localPath, remotePath);
     } else {
-        
+
         var directory = await sftp.realPath(path.dirname(remotePath));
         if (!(await sftp.exists(directory))) {
             await sftp.mkdir(directory, true);
             console.log("Created directories.");
         }
 
+        // /home/a/index
+
         var modifiedPath = remotePath;
-        if ((await sftp.stat(remotePath)).isDirectory) {
-            var modifiedPath = modifiedPath + path.basename(localPath);
+        if (await sftp.exists(remotePath)) {
+            if ((await sftp.stat(remotePath)).isDirectory) {
+                var modifiedPath = modifiedPath + path.basename(localPath);
+            }
         }
 
         return sftp.put(fs.createReadStream(localPath), modifiedPath);
@@ -63,4 +67,5 @@ sftp.connect({
     return sftp.end();
 }).catch(err => {
     core.setFailed(`Action failed with error ${err}`);
+    process.exit(1);
 });
