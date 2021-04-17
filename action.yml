@@ -1,5 +1,7 @@
-name: 'SFTP'
+name: 'SFTP SSH Action'
 description: 'Upload files or directories via sftp and ssh'
+icon: 'upload'
+color: 'green'
 inputs:
   host:
     description: 'Host to login'
