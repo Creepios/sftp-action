@@ -49,9 +49,7 @@ sftp.connect({
             await sftp.mkdir(directory, true);
             console.log("Created directories.");
         }
-
-        // /home/a/index
-
+        
         var modifiedPath = remotePath;
         if (await sftp.exists(remotePath)) {
             if ((await sftp.stat(remotePath)).isDirectory) {
