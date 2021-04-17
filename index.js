@@ -1,5 +1,4 @@
 const core = require('@actions/core');
-const github = require('@actions/github');
 const fs = require('fs');
 const path = require('path');
 
@@ -11,9 +10,10 @@ const port = parseInt(core.getInput('port'));
 const username = core.getInput('username');
 const password = core.getInput('password');
 const agent = core.getInput('agent');
-var privateKey = core.getInput('privateKey');
 const privateKeyIsFile = core.getInput('privateKeyIsFile');
 const passphrase = core.getInput('passphrase');
+
+var privateKey = core.getInput('privateKey');
 
 core.setSecret(password);
 if (passphrase != undefined) {
@@ -36,16 +36,30 @@ sftp.connect({
     agent: agent,
     privateKey: privateKey,
     passphrase: passphrase
-}).then(() => {
+}).then(async () => {
     console.log("Connection established.");
-    console.log("Current working directory: " + sftp.cwd())
-    if (localPath.extname == "") {
+    console.log("Current working directory: " + await sftp.cwd())
+
+    if (fs.lstatSync(localPath).isDirectory()) {
         return sftp.uploadDir(localPath, remotePath);
     } else {
-        return sftp.put(localPath, remotePath);
+        
+        var directory = await sftp.realPath(path.dirname(remotePath));
+        if (!(await sftp.exists(directory))) {
+            await sftp.mkdir(directory, true);
+            console.log("Created directories.");
+        }
+
+        var modifiedPath = remotePath;
+        if ((await sftp.stat(remotePath)).isDirectory) {
+            var modifiedPath = modifiedPath + path.basename(localPath);
+        }
+
+        return sftp.put(fs.createReadStream(localPath), modifiedPath);
     }
-    
+
 }).then(() => {
+    console.log("Upload finished.");
     return sftp.end();
 }).catch(err => {
     core.setFailed(`Action failed with error ${err}`);
