@@ -33,6 +33,7 @@ inputs:
   privateKeyIsFile: 
     description: 'Define if private key is a local file or string'
     required: false
+    default: 'false'
   passphrase: 
     description: 'Define a passphrase for encrypted private keys'
     required: false
