@@ -46,7 +46,7 @@ jobs:
       uses: actions/checkout@v2.3.4
     - name: Upload Files
       id: upload
-      uses: Creepios/sftp-action@v1.0.1
+      uses: Creepios/sftp-action@v1.0.3
       with:
         host: '127.0.0.1'
         port: 22
