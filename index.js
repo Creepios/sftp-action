@@ -27,6 +27,7 @@ if (privateKeyIsFile == "true") {
 
 const localPath = core.getInput('localPath');
 const remotePath = core.getInput('remotePath');
+const filter = new RegExp(core.getInput('filter'));
 
 sftp.connect({
     host: host,
@@ -41,7 +42,7 @@ sftp.connect({
     console.log("Current working directory: " + await sftp.cwd())
 
     if (fs.lstatSync(localPath).isDirectory()) {
-        return sftp.uploadDir(localPath, remotePath);
+        return sftp.uploadDir(localPath, remotePath, filter);
     } else {
 
         var directory = await sftp.realPath(path.dirname(remotePath));
@@ -49,7 +50,7 @@ sftp.connect({
             await sftp.mkdir(directory, true);
             console.log("Created directories.");
         }
-        
+
         var modifiedPath = remotePath;
         if (await sftp.exists(remotePath)) {
             if ((await sftp.stat(remotePath)).isDirectory) {
