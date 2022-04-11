@@ -27,6 +27,7 @@ if (privateKeyIsFile == "true") {
 
 const localPath = core.getInput('localPath');
 const remotePath = core.getInput('remotePath');
+const additionalPaths = core.getInput('additionalPaths')
 
 sftp.connect({
     host: host,
@@ -39,26 +40,22 @@ sftp.connect({
 }).then(async () => {
     console.log("Connection established.");
     console.log("Current working directory: " + await sftp.cwd())
+    let promisesList = [processPath(localPath, remotePath)] //TODO: Instead of localPath, remotePath use key/value to uplaod multiple files at once.
 
-    if (fs.lstatSync(localPath).isDirectory()) {
-        return sftp.uploadDir(localPath, remotePath);
-    } else {
-
-        var directory = await sftp.realPath(path.dirname(remotePath));
-        if (!(await sftp.exists(directory))) {
-            await sftp.mkdir(directory, true);
-            console.log("Created directories.");
+    const parsedAdditionalPaths = (() => {
+        try {
+            const parsedAdditionalPaths = JSON.parse(additionalPaths)
+            return Object.entries(parsedAdditionalPaths)
         }
-        
-        var modifiedPath = remotePath;
-        if (await sftp.exists(remotePath)) {
-            if ((await sftp.stat(remotePath)).isDirectory) {
-                var modifiedPath = modifiedPath + path.basename(localPath);
-            }
+        catch (e) {
+            throw "Error parsing addtionalPaths. Make sure it is a valid JSON object (key/ value pairs)."
         }
+    })()
 
-        return sftp.put(fs.createReadStream(localPath), modifiedPath);
-    }
+    parsedAdditionalPaths.forEach(([local, remote]) => {
+        promisesList.push(processPath(local, remote))
+    })
+    return Promise.all(promisesList)
 
 }).then(() => {
     console.log("Upload finished.");
@@ -67,3 +64,26 @@ sftp.connect({
     core.setFailed(`Action failed with error ${err}`);
     process.exit(1);
 });
+
+function processPath(local, remote) {
+    console.log("Uploading: " + local + " to " + remote)
+    if (fs.lstatSync(local).isDirectory()) {
+        return sftp.uploadDir(local, remote);
+    } else {
+
+        var directory = await sftp.realPath(path.dirname(remote));
+        if (!(await sftp.exists(directory))) {
+            await sftp.mkdir(directory, true);
+            console.log("Created directories.");
+        }
+
+        var modifiedPath = remote;
+        if (await sftp.exists(remote)) {
+            if ((await sftp.stat(remote)).isDirectory) {
+                var modifiedPath = modifiedPath + path.basename(local);
+            }
+        }
+
+        return sftp.put(fs.createReadStream(local), modifiedPath);
+    }
+}

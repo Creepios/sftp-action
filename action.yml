@@ -21,6 +21,8 @@ inputs:
     description: 'Passwort to login'
     required: true
     default: 'password'
+  additionalPaths:
+    description: "Map of the path to upload multiple files. '{"localPath":"remotePath"}'"
   localPath: 
     description: 'Local file or directory'
     required: true
