@@ -23,6 +23,8 @@ inputs:
     default: 'password'
   additionalPaths:
     description: "Map of the path to upload multiple files."
+    required: false
+    default: '{}'
   localPath: 
     description: 'Local file or directory'
     required: true

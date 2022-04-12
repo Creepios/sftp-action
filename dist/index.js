@@ -30627,7 +30627,7 @@ if (privateKeyIsFile == "true") {
 
 const localPath = core.getInput('localPath');
 const remotePath = core.getInput('remotePath');
-const additionalPaths = core.getInput('additionalPaths') || {}
+const additionalPaths = core.getInput('additionalPaths')
 
 sftp.connect({
     host: host,
