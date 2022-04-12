@@ -33,6 +33,10 @@ This action can (currently only) upload files and directories over sftp with ssh
 ### `passphrase`
 **Optional** Define a passphrase for encrypted private keys.
 
+### `additionalPaths`
+**Optional** Upload multiple files. type: JSON Object (key/ value). E.g '{"localPath":"remotePath"}'.
+
+
 ## Example usage
 ```
 on: [push]
