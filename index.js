@@ -65,7 +65,7 @@ sftp.connect({
     process.exit(1);
 });
 
-function processPath(local, remote) {
+async function processPath(local, remote) {
     console.log("Uploading: " + local + " to " + remote)
     if (fs.lstatSync(local).isDirectory()) {
         return sftp.uploadDir(local, remote);
