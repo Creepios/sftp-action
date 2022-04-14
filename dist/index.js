@@ -30651,9 +30651,9 @@ sftp.connect({
         }
     })()
 
-    parsedAdditionalPaths.forEach(async ([local, remote]) => {
+    for (const [local, remote] of parsedAdditionalPaths) {
         await processPath(local, remote)
-    })
+    }
 
 }).then(() => {
     console.log("Upload finished.");
