@@ -45,6 +45,11 @@ inputs:
   passphrase: 
     description: 'Define a passphrase for encrypted private keys'
     required: false
+  exclude:
+    description: 'Exclude files and directories if uplaoding a dirctory'
+    required: false
+    default: '[]'
+    
 runs:
   using: 'node12'
   main: 'dist/index.js'

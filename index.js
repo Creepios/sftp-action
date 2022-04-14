@@ -28,6 +28,7 @@ if (privateKeyIsFile == "true") {
 const localPath = core.getInput('localPath');
 const remotePath = core.getInput('remotePath');
 const additionalPaths = core.getInput('additionalPaths')
+const exclude = core.getInput('exclude')
 
 sftp.connect({
     host: host,
@@ -40,8 +41,6 @@ sftp.connect({
 }).then(async () => {
     console.log("Connection established.");
     console.log("Current working directory: " + await sftp.cwd())
-    let promisesList = [processPath(localPath, remotePath)] //TODO: Instead of localPath, remotePath use key/value to uplaod multiple files at once.
-
     const parsedAdditionalPaths = (() => {
         try {
             const parsedAdditionalPaths = JSON.parse(additionalPaths)
@@ -51,9 +50,22 @@ sftp.connect({
             throw "Error parsing addtionalPaths. Make sure it is a valid JSON object (key/ value pairs)."
         }
     })()
+    const parsedExclude = (() => {
+        try {
+            return JSON.parse(exclude)
+        }
+        catch (e) {
+            throw "Error parsing exlcude. Make sure it is a valid Array of strings."
+        }
+    })()
+
+
+    let promisesList = [processPath(localPath, remotePath, parsedExclude )] 
+
+
 
     parsedAdditionalPaths.forEach(([local, remote]) => {
-        promisesList.push(processPath(local, remote))
+        promisesList.push(processPath(local, remote, parsedExclude))
     })
     return Promise.all(promisesList)
 
@@ -65,10 +77,13 @@ sftp.connect({
     process.exit(1);
 });
 
-async function processPath(local, remote) {
+async function processPath(local, remote, exclude = []) {
     console.log("Uploading: " + local + " to " + remote)
+
     if (fs.lstatSync(local).isDirectory()) {
-        return sftp.uploadDir(local, remote);
+        return sftp.uploadDir(local, remote, (path, isDir) => {
+            return !exclude.includes(path)
+        });
     } else {
 
         var directory = await sftp.realPath(path.dirname(remote));
