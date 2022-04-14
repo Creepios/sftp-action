@@ -52,7 +52,7 @@ sftp.connect({
         }
     })()
 
-    parsedAdditionalPaths.forEach(([local, remote]) => {
+    parsedAdditionalPaths.forEach(async ([local, remote]) => {
         await processPath(local, remote)
     })
 
