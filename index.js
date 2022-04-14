@@ -40,7 +40,7 @@ sftp.connect({
 }).then(async () => {
     console.log("Connection established.");
     console.log("Current working directory: " + await sftp.cwd())
-    let promisesList = [processPath(localPath, remotePath)] //TODO: Instead of localPath, remotePath use key/value to uplaod multiple files at once.
+    await processPath(localPath, remotePath) //TODO: Instead of localPath, remotePath use key/value to uplaod multiple files at once.
 
     const parsedAdditionalPaths = (() => {
         try {
@@ -53,9 +53,8 @@ sftp.connect({
     })()
 
     parsedAdditionalPaths.forEach(([local, remote]) => {
-        promisesList.push(processPath(local, remote))
+        await processPath(local, remote)
     })
-    return Promise.all(promisesList)
 
 }).then(() => {
     console.log("Upload finished.");
