@@ -1,22 +1,14 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 6447:
-/***/ ((module) => {
-
-"use strict";
-module.exports = {"i8":"1.5.0"};
-
-/***/ }),
-
-/***/ 4582:
+/***/ 124:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 module.exports = require(__nccwpck_require__.ab + "lib/protocol/crypto/build/Release/sshcrypto.node")
 
 /***/ }),
 
-/***/ 5604:
+/***/ 9165:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -42,8 +34,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.issue = exports.issueCommand = void 0;
-const os = __importStar(__nccwpck_require__(2087));
-const utils_1 = __nccwpck_require__(1245);
+const os = __importStar(__nccwpck_require__(2037));
+const utils_1 = __nccwpck_require__(798);
 /**
  * Commands
  *
@@ -115,7 +107,7 @@ function escapeProperty(s) {
 
 /***/ }),
 
-/***/ 5127:
+/***/ 8864:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -149,12 +141,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.notice = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
-const command_1 = __nccwpck_require__(5604);
-const file_command_1 = __nccwpck_require__(7352);
-const utils_1 = __nccwpck_require__(1245);
-const os = __importStar(__nccwpck_require__(2087));
-const path = __importStar(__nccwpck_require__(5622));
+exports.getIDToken = exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.notice = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
+const command_1 = __nccwpck_require__(9165);
+const file_command_1 = __nccwpck_require__(6526);
+const utils_1 = __nccwpck_require__(798);
+const os = __importStar(__nccwpck_require__(2037));
+const path = __importStar(__nccwpck_require__(1017));
+const oidc_utils_1 = __nccwpck_require__(5912);
 /**
  * The code to exit an action
  */
@@ -423,11 +416,17 @@ function getState(name) {
     return process.env[`STATE_${name}`] || '';
 }
 exports.getState = getState;
+function getIDToken(aud) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield oidc_utils_1.OidcClient.getIDToken(aud);
+    });
+}
+exports.getIDToken = getIDToken;
 //# sourceMappingURL=core.js.map
 
 /***/ }),
 
-/***/ 7352:
+/***/ 6526:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -456,9 +455,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.issueCommand = void 0;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const fs = __importStar(__nccwpck_require__(5747));
-const os = __importStar(__nccwpck_require__(2087));
-const utils_1 = __nccwpck_require__(1245);
+const fs = __importStar(__nccwpck_require__(7147));
+const os = __importStar(__nccwpck_require__(2037));
+const utils_1 = __nccwpck_require__(798);
 function issueCommand(command, message) {
     const filePath = process.env[`GITHUB_${command}`];
     if (!filePath) {
@@ -476,7 +475,91 @@ exports.issueCommand = issueCommand;
 
 /***/ }),
 
-/***/ 1245:
+/***/ 5912:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OidcClient = void 0;
+const http_client_1 = __nccwpck_require__(9740);
+const auth_1 = __nccwpck_require__(2321);
+const core_1 = __nccwpck_require__(8864);
+class OidcClient {
+    static createHttpClient(allowRetry = true, maxRetry = 10) {
+        const requestOptions = {
+            allowRetries: allowRetry,
+            maxRetries: maxRetry
+        };
+        return new http_client_1.HttpClient('actions/oidc-client', [new auth_1.BearerCredentialHandler(OidcClient.getRequestToken())], requestOptions);
+    }
+    static getRequestToken() {
+        const token = process.env['ACTIONS_ID_TOKEN_REQUEST_TOKEN'];
+        if (!token) {
+            throw new Error('Unable to get ACTIONS_ID_TOKEN_REQUEST_TOKEN env variable');
+        }
+        return token;
+    }
+    static getIDTokenUrl() {
+        const runtimeUrl = process.env['ACTIONS_ID_TOKEN_REQUEST_URL'];
+        if (!runtimeUrl) {
+            throw new Error('Unable to get ACTIONS_ID_TOKEN_REQUEST_URL env variable');
+        }
+        return runtimeUrl;
+    }
+    static getCall(id_token_url) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const httpclient = OidcClient.createHttpClient();
+            const res = yield httpclient
+                .getJson(id_token_url)
+                .catch(error => {
+                throw new Error(`Failed to get ID Token. \n 
+        Error Code : ${error.statusCode}\n 
+        Error Message: ${error.result.message}`);
+            });
+            const id_token = (_a = res.result) === null || _a === void 0 ? void 0 : _a.value;
+            if (!id_token) {
+                throw new Error('Response json body do not have ID Token field');
+            }
+            return id_token;
+        });
+    }
+    static getIDToken(audience) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // New ID Token is requested from action service
+                let id_token_url = OidcClient.getIDTokenUrl();
+                if (audience) {
+                    const encodedAudience = encodeURIComponent(audience);
+                    id_token_url = `${id_token_url}&audience=${encodedAudience}`;
+                }
+                core_1.debug(`ID token url is ${id_token_url}`);
+                const id_token = yield OidcClient.getCall(id_token_url);
+                core_1.setSecret(id_token);
+                return id_token;
+            }
+            catch (error) {
+                throw new Error(`Error message: ${error.message}`);
+            }
+        });
+    }
+}
+exports.OidcClient = OidcClient;
+//# sourceMappingURL=oidc-utils.js.map
+
+/***/ }),
+
+/***/ 798:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -511,6 +594,7 @@ function toCommandProperties(annotationProperties) {
     }
     return {
         title: annotationProperties.title,
+        file: annotationProperties.file,
         line: annotationProperties.startLine,
         endLine: annotationProperties.endLine,
         col: annotationProperties.startColumn,
@@ -522,7 +606,683 @@ exports.toCommandProperties = toCommandProperties;
 
 /***/ }),
 
-/***/ 7790:
+/***/ 2321:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+class BasicCredentialHandler {
+    constructor(username, password) {
+        this.username = username;
+        this.password = password;
+    }
+    prepareRequest(options) {
+        options.headers['Authorization'] =
+            'Basic ' +
+                Buffer.from(this.username + ':' + this.password).toString('base64');
+    }
+    // This handler cannot handle 401
+    canHandleAuthentication(response) {
+        return false;
+    }
+    handleAuthentication(httpClient, requestInfo, objs) {
+        return null;
+    }
+}
+exports.BasicCredentialHandler = BasicCredentialHandler;
+class BearerCredentialHandler {
+    constructor(token) {
+        this.token = token;
+    }
+    // currently implements pre-authorization
+    // TODO: support preAuth = false where it hooks on 401
+    prepareRequest(options) {
+        options.headers['Authorization'] = 'Bearer ' + this.token;
+    }
+    // This handler cannot handle 401
+    canHandleAuthentication(response) {
+        return false;
+    }
+    handleAuthentication(httpClient, requestInfo, objs) {
+        return null;
+    }
+}
+exports.BearerCredentialHandler = BearerCredentialHandler;
+class PersonalAccessTokenCredentialHandler {
+    constructor(token) {
+        this.token = token;
+    }
+    // currently implements pre-authorization
+    // TODO: support preAuth = false where it hooks on 401
+    prepareRequest(options) {
+        options.headers['Authorization'] =
+            'Basic ' + Buffer.from('PAT:' + this.token).toString('base64');
+    }
+    // This handler cannot handle 401
+    canHandleAuthentication(response) {
+        return false;
+    }
+    handleAuthentication(httpClient, requestInfo, objs) {
+        return null;
+    }
+}
+exports.PersonalAccessTokenCredentialHandler = PersonalAccessTokenCredentialHandler;
+
+
+/***/ }),
+
+/***/ 9740:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const http = __nccwpck_require__(3685);
+const https = __nccwpck_require__(5687);
+const pm = __nccwpck_require__(2929);
+let tunnel;
+var HttpCodes;
+(function (HttpCodes) {
+    HttpCodes[HttpCodes["OK"] = 200] = "OK";
+    HttpCodes[HttpCodes["MultipleChoices"] = 300] = "MultipleChoices";
+    HttpCodes[HttpCodes["MovedPermanently"] = 301] = "MovedPermanently";
+    HttpCodes[HttpCodes["ResourceMoved"] = 302] = "ResourceMoved";
+    HttpCodes[HttpCodes["SeeOther"] = 303] = "SeeOther";
+    HttpCodes[HttpCodes["NotModified"] = 304] = "NotModified";
+    HttpCodes[HttpCodes["UseProxy"] = 305] = "UseProxy";
+    HttpCodes[HttpCodes["SwitchProxy"] = 306] = "SwitchProxy";
+    HttpCodes[HttpCodes["TemporaryRedirect"] = 307] = "TemporaryRedirect";
+    HttpCodes[HttpCodes["PermanentRedirect"] = 308] = "PermanentRedirect";
+    HttpCodes[HttpCodes["BadRequest"] = 400] = "BadRequest";
+    HttpCodes[HttpCodes["Unauthorized"] = 401] = "Unauthorized";
+    HttpCodes[HttpCodes["PaymentRequired"] = 402] = "PaymentRequired";
+    HttpCodes[HttpCodes["Forbidden"] = 403] = "Forbidden";
+    HttpCodes[HttpCodes["NotFound"] = 404] = "NotFound";
+    HttpCodes[HttpCodes["MethodNotAllowed"] = 405] = "MethodNotAllowed";
+    HttpCodes[HttpCodes["NotAcceptable"] = 406] = "NotAcceptable";
+    HttpCodes[HttpCodes["ProxyAuthenticationRequired"] = 407] = "ProxyAuthenticationRequired";
+    HttpCodes[HttpCodes["RequestTimeout"] = 408] = "RequestTimeout";
+    HttpCodes[HttpCodes["Conflict"] = 409] = "Conflict";
+    HttpCodes[HttpCodes["Gone"] = 410] = "Gone";
+    HttpCodes[HttpCodes["TooManyRequests"] = 429] = "TooManyRequests";
+    HttpCodes[HttpCodes["InternalServerError"] = 500] = "InternalServerError";
+    HttpCodes[HttpCodes["NotImplemented"] = 501] = "NotImplemented";
+    HttpCodes[HttpCodes["BadGateway"] = 502] = "BadGateway";
+    HttpCodes[HttpCodes["ServiceUnavailable"] = 503] = "ServiceUnavailable";
+    HttpCodes[HttpCodes["GatewayTimeout"] = 504] = "GatewayTimeout";
+})(HttpCodes = exports.HttpCodes || (exports.HttpCodes = {}));
+var Headers;
+(function (Headers) {
+    Headers["Accept"] = "accept";
+    Headers["ContentType"] = "content-type";
+})(Headers = exports.Headers || (exports.Headers = {}));
+var MediaTypes;
+(function (MediaTypes) {
+    MediaTypes["ApplicationJson"] = "application/json";
+})(MediaTypes = exports.MediaTypes || (exports.MediaTypes = {}));
+/**
+ * Returns the proxy URL, depending upon the supplied url and proxy environment variables.
+ * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+ */
+function getProxyUrl(serverUrl) {
+    let proxyUrl = pm.getProxyUrl(new URL(serverUrl));
+    return proxyUrl ? proxyUrl.href : '';
+}
+exports.getProxyUrl = getProxyUrl;
+const HttpRedirectCodes = [
+    HttpCodes.MovedPermanently,
+    HttpCodes.ResourceMoved,
+    HttpCodes.SeeOther,
+    HttpCodes.TemporaryRedirect,
+    HttpCodes.PermanentRedirect
+];
+const HttpResponseRetryCodes = [
+    HttpCodes.BadGateway,
+    HttpCodes.ServiceUnavailable,
+    HttpCodes.GatewayTimeout
+];
+const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
+const ExponentialBackoffCeiling = 10;
+const ExponentialBackoffTimeSlice = 5;
+class HttpClientError extends Error {
+    constructor(message, statusCode) {
+        super(message);
+        this.name = 'HttpClientError';
+        this.statusCode = statusCode;
+        Object.setPrototypeOf(this, HttpClientError.prototype);
+    }
+}
+exports.HttpClientError = HttpClientError;
+class HttpClientResponse {
+    constructor(message) {
+        this.message = message;
+    }
+    readBody() {
+        return new Promise(async (resolve, reject) => {
+            let output = Buffer.alloc(0);
+            this.message.on('data', (chunk) => {
+                output = Buffer.concat([output, chunk]);
+            });
+            this.message.on('end', () => {
+                resolve(output.toString());
+            });
+        });
+    }
+}
+exports.HttpClientResponse = HttpClientResponse;
+function isHttps(requestUrl) {
+    let parsedUrl = new URL(requestUrl);
+    return parsedUrl.protocol === 'https:';
+}
+exports.isHttps = isHttps;
+class HttpClient {
+    constructor(userAgent, handlers, requestOptions) {
+        this._ignoreSslError = false;
+        this._allowRedirects = true;
+        this._allowRedirectDowngrade = false;
+        this._maxRedirects = 50;
+        this._allowRetries = false;
+        this._maxRetries = 1;
+        this._keepAlive = false;
+        this._disposed = false;
+        this.userAgent = userAgent;
+        this.handlers = handlers || [];
+        this.requestOptions = requestOptions;
+        if (requestOptions) {
+            if (requestOptions.ignoreSslError != null) {
+                this._ignoreSslError = requestOptions.ignoreSslError;
+            }
+            this._socketTimeout = requestOptions.socketTimeout;
+            if (requestOptions.allowRedirects != null) {
+                this._allowRedirects = requestOptions.allowRedirects;
+            }
+            if (requestOptions.allowRedirectDowngrade != null) {
+                this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
+            }
+            if (requestOptions.maxRedirects != null) {
+                this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
+            }
+            if (requestOptions.keepAlive != null) {
+                this._keepAlive = requestOptions.keepAlive;
+            }
+            if (requestOptions.allowRetries != null) {
+                this._allowRetries = requestOptions.allowRetries;
+            }
+            if (requestOptions.maxRetries != null) {
+                this._maxRetries = requestOptions.maxRetries;
+            }
+        }
+    }
+    options(requestUrl, additionalHeaders) {
+        return this.request('OPTIONS', requestUrl, null, additionalHeaders || {});
+    }
+    get(requestUrl, additionalHeaders) {
+        return this.request('GET', requestUrl, null, additionalHeaders || {});
+    }
+    del(requestUrl, additionalHeaders) {
+        return this.request('DELETE', requestUrl, null, additionalHeaders || {});
+    }
+    post(requestUrl, data, additionalHeaders) {
+        return this.request('POST', requestUrl, data, additionalHeaders || {});
+    }
+    patch(requestUrl, data, additionalHeaders) {
+        return this.request('PATCH', requestUrl, data, additionalHeaders || {});
+    }
+    put(requestUrl, data, additionalHeaders) {
+        return this.request('PUT', requestUrl, data, additionalHeaders || {});
+    }
+    head(requestUrl, additionalHeaders) {
+        return this.request('HEAD', requestUrl, null, additionalHeaders || {});
+    }
+    sendStream(verb, requestUrl, stream, additionalHeaders) {
+        return this.request(verb, requestUrl, stream, additionalHeaders);
+    }
+    /**
+     * Gets a typed object from an endpoint
+     * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
+     */
+    async getJson(requestUrl, additionalHeaders = {}) {
+        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+        let res = await this.get(requestUrl, additionalHeaders);
+        return this._processResponse(res, this.requestOptions);
+    }
+    async postJson(requestUrl, obj, additionalHeaders = {}) {
+        let data = JSON.stringify(obj, null, 2);
+        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+        let res = await this.post(requestUrl, data, additionalHeaders);
+        return this._processResponse(res, this.requestOptions);
+    }
+    async putJson(requestUrl, obj, additionalHeaders = {}) {
+        let data = JSON.stringify(obj, null, 2);
+        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+        let res = await this.put(requestUrl, data, additionalHeaders);
+        return this._processResponse(res, this.requestOptions);
+    }
+    async patchJson(requestUrl, obj, additionalHeaders = {}) {
+        let data = JSON.stringify(obj, null, 2);
+        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
+        additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
+        let res = await this.patch(requestUrl, data, additionalHeaders);
+        return this._processResponse(res, this.requestOptions);
+    }
+    /**
+     * Makes a raw http request.
+     * All other methods such as get, post, patch, and request ultimately call this.
+     * Prefer get, del, post and patch
+     */
+    async request(verb, requestUrl, data, headers) {
+        if (this._disposed) {
+            throw new Error('Client has already been disposed.');
+        }
+        let parsedUrl = new URL(requestUrl);
+        let info = this._prepareRequest(verb, parsedUrl, headers);
+        // Only perform retries on reads since writes may not be idempotent.
+        let maxTries = this._allowRetries && RetryableHttpVerbs.indexOf(verb) != -1
+            ? this._maxRetries + 1
+            : 1;
+        let numTries = 0;
+        let response;
+        while (numTries < maxTries) {
+            response = await this.requestRaw(info, data);
+            // Check if it's an authentication challenge
+            if (response &&
+                response.message &&
+                response.message.statusCode === HttpCodes.Unauthorized) {
+                let authenticationHandler;
+                for (let i = 0; i < this.handlers.length; i++) {
+                    if (this.handlers[i].canHandleAuthentication(response)) {
+                        authenticationHandler = this.handlers[i];
+                        break;
+                    }
+                }
+                if (authenticationHandler) {
+                    return authenticationHandler.handleAuthentication(this, info, data);
+                }
+                else {
+                    // We have received an unauthorized response but have no handlers to handle it.
+                    // Let the response return to the caller.
+                    return response;
+                }
+            }
+            let redirectsRemaining = this._maxRedirects;
+            while (HttpRedirectCodes.indexOf(response.message.statusCode) != -1 &&
+                this._allowRedirects &&
+                redirectsRemaining > 0) {
+                const redirectUrl = response.message.headers['location'];
+                if (!redirectUrl) {
+                    // if there's no location to redirect to, we won't
+                    break;
+                }
+                let parsedRedirectUrl = new URL(redirectUrl);
+                if (parsedUrl.protocol == 'https:' &&
+                    parsedUrl.protocol != parsedRedirectUrl.protocol &&
+                    !this._allowRedirectDowngrade) {
+                    throw new Error('Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.');
+                }
+                // we need to finish reading the response before reassigning response
+                // which will leak the open socket.
+                await response.readBody();
+                // strip authorization header if redirected to a different hostname
+                if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
+                    for (let header in headers) {
+                        // header names are case insensitive
+                        if (header.toLowerCase() === 'authorization') {
+                            delete headers[header];
+                        }
+                    }
+                }
+                // let's make the request with the new redirectUrl
+                info = this._prepareRequest(verb, parsedRedirectUrl, headers);
+                response = await this.requestRaw(info, data);
+                redirectsRemaining--;
+            }
+            if (HttpResponseRetryCodes.indexOf(response.message.statusCode) == -1) {
+                // If not a retry code, return immediately instead of retrying
+                return response;
+            }
+            numTries += 1;
+            if (numTries < maxTries) {
+                await response.readBody();
+                await this._performExponentialBackoff(numTries);
+            }
+        }
+        return response;
+    }
+    /**
+     * Needs to be called if keepAlive is set to true in request options.
+     */
+    dispose() {
+        if (this._agent) {
+            this._agent.destroy();
+        }
+        this._disposed = true;
+    }
+    /**
+     * Raw request.
+     * @param info
+     * @param data
+     */
+    requestRaw(info, data) {
+        return new Promise((resolve, reject) => {
+            let callbackForResult = function (err, res) {
+                if (err) {
+                    reject(err);
+                }
+                resolve(res);
+            };
+            this.requestRawWithCallback(info, data, callbackForResult);
+        });
+    }
+    /**
+     * Raw request with callback.
+     * @param info
+     * @param data
+     * @param onResult
+     */
+    requestRawWithCallback(info, data, onResult) {
+        let socket;
+        if (typeof data === 'string') {
+            info.options.headers['Content-Length'] = Buffer.byteLength(data, 'utf8');
+        }
+        let callbackCalled = false;
+        let handleResult = (err, res) => {
+            if (!callbackCalled) {
+                callbackCalled = true;
+                onResult(err, res);
+            }
+        };
+        let req = info.httpModule.request(info.options, (msg) => {
+            let res = new HttpClientResponse(msg);
+            handleResult(null, res);
+        });
+        req.on('socket', sock => {
+            socket = sock;
+        });
+        // If we ever get disconnected, we want the socket to timeout eventually
+        req.setTimeout(this._socketTimeout || 3 * 60000, () => {
+            if (socket) {
+                socket.end();
+            }
+            handleResult(new Error('Request timeout: ' + info.options.path), null);
+        });
+        req.on('error', function (err) {
+            // err has statusCode property
+            // res should have headers
+            handleResult(err, null);
+        });
+        if (data && typeof data === 'string') {
+            req.write(data, 'utf8');
+        }
+        if (data && typeof data !== 'string') {
+            data.on('close', function () {
+                req.end();
+            });
+            data.pipe(req);
+        }
+        else {
+            req.end();
+        }
+    }
+    /**
+     * Gets an http agent. This function is useful when you need an http agent that handles
+     * routing through a proxy server - depending upon the url and proxy environment variables.
+     * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+     */
+    getAgent(serverUrl) {
+        let parsedUrl = new URL(serverUrl);
+        return this._getAgent(parsedUrl);
+    }
+    _prepareRequest(method, requestUrl, headers) {
+        const info = {};
+        info.parsedUrl = requestUrl;
+        const usingSsl = info.parsedUrl.protocol === 'https:';
+        info.httpModule = usingSsl ? https : http;
+        const defaultPort = usingSsl ? 443 : 80;
+        info.options = {};
+        info.options.host = info.parsedUrl.hostname;
+        info.options.port = info.parsedUrl.port
+            ? parseInt(info.parsedUrl.port)
+            : defaultPort;
+        info.options.path =
+            (info.parsedUrl.pathname || '') + (info.parsedUrl.search || '');
+        info.options.method = method;
+        info.options.headers = this._mergeHeaders(headers);
+        if (this.userAgent != null) {
+            info.options.headers['user-agent'] = this.userAgent;
+        }
+        info.options.agent = this._getAgent(info.parsedUrl);
+        // gives handlers an opportunity to participate
+        if (this.handlers) {
+            this.handlers.forEach(handler => {
+                handler.prepareRequest(info.options);
+            });
+        }
+        return info;
+    }
+    _mergeHeaders(headers) {
+        const lowercaseKeys = obj => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
+        if (this.requestOptions && this.requestOptions.headers) {
+            return Object.assign({}, lowercaseKeys(this.requestOptions.headers), lowercaseKeys(headers));
+        }
+        return lowercaseKeys(headers || {});
+    }
+    _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
+        const lowercaseKeys = obj => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
+        let clientHeader;
+        if (this.requestOptions && this.requestOptions.headers) {
+            clientHeader = lowercaseKeys(this.requestOptions.headers)[header];
+        }
+        return additionalHeaders[header] || clientHeader || _default;
+    }
+    _getAgent(parsedUrl) {
+        let agent;
+        let proxyUrl = pm.getProxyUrl(parsedUrl);
+        let useProxy = proxyUrl && proxyUrl.hostname;
+        if (this._keepAlive && useProxy) {
+            agent = this._proxyAgent;
+        }
+        if (this._keepAlive && !useProxy) {
+            agent = this._agent;
+        }
+        // if agent is already assigned use that agent.
+        if (!!agent) {
+            return agent;
+        }
+        const usingSsl = parsedUrl.protocol === 'https:';
+        let maxSockets = 100;
+        if (!!this.requestOptions) {
+            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
+        }
+        if (useProxy) {
+            // If using proxy, need tunnel
+            if (!tunnel) {
+                tunnel = __nccwpck_require__(3357);
+            }
+            const agentOptions = {
+                maxSockets: maxSockets,
+                keepAlive: this._keepAlive,
+                proxy: {
+                    ...((proxyUrl.username || proxyUrl.password) && {
+                        proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
+                    }),
+                    host: proxyUrl.hostname,
+                    port: proxyUrl.port
+                }
+            };
+            let tunnelAgent;
+            const overHttps = proxyUrl.protocol === 'https:';
+            if (usingSsl) {
+                tunnelAgent = overHttps ? tunnel.httpsOverHttps : tunnel.httpsOverHttp;
+            }
+            else {
+                tunnelAgent = overHttps ? tunnel.httpOverHttps : tunnel.httpOverHttp;
+            }
+            agent = tunnelAgent(agentOptions);
+            this._proxyAgent = agent;
+        }
+        // if reusing agent across request and tunneling agent isn't assigned create a new agent
+        if (this._keepAlive && !agent) {
+            const options = { keepAlive: this._keepAlive, maxSockets: maxSockets };
+            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
+            this._agent = agent;
+        }
+        // if not using private agent and tunnel agent isn't setup then use global agent
+        if (!agent) {
+            agent = usingSsl ? https.globalAgent : http.globalAgent;
+        }
+        if (usingSsl && this._ignoreSslError) {
+            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
+            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
+            // we have to cast it to any and change it directly
+            agent.options = Object.assign(agent.options || {}, {
+                rejectUnauthorized: false
+            });
+        }
+        return agent;
+    }
+    _performExponentialBackoff(retryNumber) {
+        retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
+        const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
+        return new Promise(resolve => setTimeout(() => resolve(), ms));
+    }
+    static dateTimeDeserializer(key, value) {
+        if (typeof value === 'string') {
+            let a = new Date(value);
+            if (!isNaN(a.valueOf())) {
+                return a;
+            }
+        }
+        return value;
+    }
+    async _processResponse(res, options) {
+        return new Promise(async (resolve, reject) => {
+            const statusCode = res.message.statusCode;
+            const response = {
+                statusCode: statusCode,
+                result: null,
+                headers: {}
+            };
+            // not found leads to null obj returned
+            if (statusCode == HttpCodes.NotFound) {
+                resolve(response);
+            }
+            let obj;
+            let contents;
+            // get the result from the body
+            try {
+                contents = await res.readBody();
+                if (contents && contents.length > 0) {
+                    if (options && options.deserializeDates) {
+                        obj = JSON.parse(contents, HttpClient.dateTimeDeserializer);
+                    }
+                    else {
+                        obj = JSON.parse(contents);
+                    }
+                    response.result = obj;
+                }
+                response.headers = res.message.headers;
+            }
+            catch (err) {
+                // Invalid resource (contents not json);  leaving result obj null
+            }
+            // note that 3xx redirects are handled by the http layer.
+            if (statusCode > 299) {
+                let msg;
+                // if exception/error in body, attempt to get better error
+                if (obj && obj.message) {
+                    msg = obj.message;
+                }
+                else if (contents && contents.length > 0) {
+                    // it may be the case that the exception is in the body message as string
+                    msg = contents;
+                }
+                else {
+                    msg = 'Failed request: (' + statusCode + ')';
+                }
+                let err = new HttpClientError(msg, statusCode);
+                err.result = response.result;
+                reject(err);
+            }
+            else {
+                resolve(response);
+            }
+        });
+    }
+}
+exports.HttpClient = HttpClient;
+
+
+/***/ }),
+
+/***/ 2929:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+function getProxyUrl(reqUrl) {
+    let usingSsl = reqUrl.protocol === 'https:';
+    let proxyUrl;
+    if (checkBypass(reqUrl)) {
+        return proxyUrl;
+    }
+    let proxyVar;
+    if (usingSsl) {
+        proxyVar = process.env['https_proxy'] || process.env['HTTPS_PROXY'];
+    }
+    else {
+        proxyVar = process.env['http_proxy'] || process.env['HTTP_PROXY'];
+    }
+    if (proxyVar) {
+        proxyUrl = new URL(proxyVar);
+    }
+    return proxyUrl;
+}
+exports.getProxyUrl = getProxyUrl;
+function checkBypass(reqUrl) {
+    if (!reqUrl.hostname) {
+        return false;
+    }
+    let noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
+    if (!noProxy) {
+        return false;
+    }
+    // Determine the request port
+    let reqPort;
+    if (reqUrl.port) {
+        reqPort = Number(reqUrl.port);
+    }
+    else if (reqUrl.protocol === 'http:') {
+        reqPort = 80;
+    }
+    else if (reqUrl.protocol === 'https:') {
+        reqPort = 443;
+    }
+    // Format the request hostname and hostname with port
+    let upperReqHosts = [reqUrl.hostname.toUpperCase()];
+    if (typeof reqPort === 'number') {
+        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
+    }
+    // Compare request host against noproxy
+    for (let upperNoProxyItem of noProxy
+        .split(',')
+        .map(x => x.trim().toUpperCase())
+        .filter(x => x)) {
+        if (upperReqHosts.some(x => x === upperNoProxyItem)) {
+            return true;
+        }
+    }
+    return false;
+}
+exports.checkBypass = checkBypass;
+
+
+/***/ }),
+
+/***/ 1582:
 /***/ ((module) => {
 
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
@@ -542,16 +1302,16 @@ module.exports = {
 
 /***/ }),
 
-/***/ 895:
+/***/ 269:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
-var errors = __nccwpck_require__(7790);
-var types = __nccwpck_require__(3083);
+var errors = __nccwpck_require__(1582);
+var types = __nccwpck_require__(4692);
 
-var Reader = __nccwpck_require__(8737);
-var Writer = __nccwpck_require__(6056);
+var Reader = __nccwpck_require__(949);
+var Writer = __nccwpck_require__(1570);
 
 
 // --- Exports
@@ -576,16 +1336,16 @@ for (var e in errors) {
 
 /***/ }),
 
-/***/ 8737:
+/***/ 949:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
-var assert = __nccwpck_require__(2357);
-var Buffer = __nccwpck_require__(9990).Buffer;
+var assert = __nccwpck_require__(9491);
+var Buffer = (__nccwpck_require__(5039).Buffer);
 
-var ASN1 = __nccwpck_require__(3083);
-var errors = __nccwpck_require__(7790);
+var ASN1 = __nccwpck_require__(4692);
+var errors = __nccwpck_require__(1582);
 
 
 // --- Globals
@@ -845,7 +1605,7 @@ module.exports = Reader;
 
 /***/ }),
 
-/***/ 3083:
+/***/ 4692:
 /***/ ((module) => {
 
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
@@ -888,15 +1648,15 @@ module.exports = {
 
 /***/ }),
 
-/***/ 6056:
+/***/ 1570:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
 
-var assert = __nccwpck_require__(2357);
-var Buffer = __nccwpck_require__(9990).Buffer;
-var ASN1 = __nccwpck_require__(3083);
-var errors = __nccwpck_require__(7790);
+var assert = __nccwpck_require__(9491);
+var Buffer = (__nccwpck_require__(5039).Buffer);
+var ASN1 = __nccwpck_require__(4692);
+var errors = __nccwpck_require__(1582);
 
 
 // --- Globals
@@ -1212,7 +1972,7 @@ module.exports = Writer;
 
 /***/ }),
 
-/***/ 6316:
+/***/ 7713:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
@@ -1220,7 +1980,7 @@ module.exports = Writer;
 // If you have no idea what ASN.1 or BER is, see this:
 // ftp://ftp.rsa.com/pub/pkcs/ascii/layman.asc
 
-var Ber = __nccwpck_require__(895);
+var Ber = __nccwpck_require__(269);
 
 
 
@@ -1239,13 +1999,13 @@ module.exports = {
 
 /***/ }),
 
-/***/ 8585:
+/***/ 6048:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var crypto_hash_sha512 = __nccwpck_require__(4245).lowlevel.crypto_hash;
+var crypto_hash_sha512 = (__nccwpck_require__(7307).lowlevel.crypto_hash);
 
 /*
  * This file is a 1:1 port from the OpenBSD blowfish.c and bcrypt_pbkdf.c. As a
@@ -1803,7 +2563,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1246:
+/***/ 1614:
 /***/ ((module) => {
 
 /* eslint-disable node/no-deprecated-api */
@@ -1882,15 +2642,15 @@ module.exports = bufferFrom
 
 /***/ }),
 
-/***/ 743:
+/***/ 8300:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-var Writable = __nccwpck_require__(3901).Writable
-var inherits = __nccwpck_require__(2150)
-var bufferFrom = __nccwpck_require__(1246)
+var Writable = (__nccwpck_require__(1093).Writable)
+var inherits = __nccwpck_require__(9294)
+var bufferFrom = __nccwpck_require__(1614)
 
 if (typeof Uint8Array === 'undefined') {
-  var U8 = __nccwpck_require__(3261)/* .Uint8Array */ .U2
+  var U8 = (__nccwpck_require__(4042)/* .Uint8Array */ .U2)
 } else {
   var U8 = Uint8Array
 }
@@ -2033,7 +2793,7 @@ function u8Concat (parts) {
 
 /***/ }),
 
-/***/ 6628:
+/***/ 7322:
 /***/ ((module) => {
 
 "use strict";
@@ -2088,23 +2848,23 @@ module.exports = createError;
 
 /***/ }),
 
-/***/ 2150:
+/***/ 9294:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 try {
-  var util = __nccwpck_require__(1669);
+  var util = __nccwpck_require__(3837);
   /* istanbul ignore next */
   if (typeof util.inherits !== 'function') throw '';
   module.exports = util.inherits;
 } catch (e) {
   /* istanbul ignore next */
-  module.exports = __nccwpck_require__(8531);
+  module.exports = __nccwpck_require__(8207);
 }
 
 
 /***/ }),
 
-/***/ 8531:
+/***/ 8207:
 /***/ ((module) => {
 
 if (typeof Object.create === 'function') {
@@ -2138,14 +2898,14 @@ if (typeof Object.create === 'function') {
 
 /***/ }),
 
-/***/ 9360:
+/***/ 8856:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var errcode = __nccwpck_require__(6628);
-var retry = __nccwpck_require__(1128);
+var errcode = __nccwpck_require__(7322);
+var retry = __nccwpck_require__(9570);
 
 var hasOwn = Object.prototype.hasOwnProperty;
 
@@ -2198,7 +2958,7 @@ module.exports = promiseRetry;
 
 /***/ }),
 
-/***/ 583:
+/***/ 8706:
 /***/ ((module) => {
 
 "use strict";
@@ -2322,7 +3082,7 @@ module.exports.q = codes;
 
 /***/ }),
 
-/***/ 914:
+/***/ 1314:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -2367,11 +3127,11 @@ var objectKeys = Object.keys || function (obj) {
 
 module.exports = Duplex;
 
-var Readable = __nccwpck_require__(7640);
+var Readable = __nccwpck_require__(2607);
 
-var Writable = __nccwpck_require__(8549);
+var Writable = __nccwpck_require__(3592);
 
-__nccwpck_require__(2150)(Duplex, Readable);
+__nccwpck_require__(9294)(Duplex, Readable);
 
 {
   // Allow the keys array to be GC'ed.
@@ -2468,7 +3228,7 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
 
 /***/ }),
 
-/***/ 5140:
+/***/ 3475:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -2499,9 +3259,9 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
 
 module.exports = PassThrough;
 
-var Transform = __nccwpck_require__(576);
+var Transform = __nccwpck_require__(9326);
 
-__nccwpck_require__(2150)(PassThrough, Transform);
+__nccwpck_require__(9294)(PassThrough, Transform);
 
 function PassThrough(options) {
   if (!(this instanceof PassThrough)) return new PassThrough(options);
@@ -2514,7 +3274,7 @@ PassThrough.prototype._transform = function (chunk, encoding, cb) {
 
 /***/ }),
 
-/***/ 7640:
+/***/ 2607:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -2549,7 +3309,7 @@ var Duplex;
 Readable.ReadableState = ReadableState;
 /*<replacement>*/
 
-var EE = __nccwpck_require__(8614).EventEmitter;
+var EE = (__nccwpck_require__(2361).EventEmitter);
 
 var EElistenerCount = function EElistenerCount(emitter, type) {
   return emitter.listeners(type).length;
@@ -2559,11 +3319,11 @@ var EElistenerCount = function EElistenerCount(emitter, type) {
 /*<replacement>*/
 
 
-var Stream = __nccwpck_require__(6268);
+var Stream = __nccwpck_require__(2883);
 /*</replacement>*/
 
 
-var Buffer = __nccwpck_require__(4293).Buffer;
+var Buffer = (__nccwpck_require__(4300).Buffer);
 
 var OurUint8Array = global.Uint8Array || function () {};
 
@@ -2577,7 +3337,7 @@ function _isUint8Array(obj) {
 /*<replacement>*/
 
 
-var debugUtil = __nccwpck_require__(1669);
+var debugUtil = __nccwpck_require__(3837);
 
 var debug;
 
@@ -2589,14 +3349,14 @@ if (debugUtil && debugUtil.debuglog) {
 /*</replacement>*/
 
 
-var BufferList = __nccwpck_require__(2726);
+var BufferList = __nccwpck_require__(4829);
 
-var destroyImpl = __nccwpck_require__(64);
+var destroyImpl = __nccwpck_require__(4515);
 
-var _require = __nccwpck_require__(3813),
+var _require = __nccwpck_require__(256),
     getHighWaterMark = _require.getHighWaterMark;
 
-var _require$codes = __nccwpck_require__(583)/* .codes */ .q,
+var _require$codes = (__nccwpck_require__(8706)/* .codes */ .q),
     ERR_INVALID_ARG_TYPE = _require$codes.ERR_INVALID_ARG_TYPE,
     ERR_STREAM_PUSH_AFTER_EOF = _require$codes.ERR_STREAM_PUSH_AFTER_EOF,
     ERR_METHOD_NOT_IMPLEMENTED = _require$codes.ERR_METHOD_NOT_IMPLEMENTED,
@@ -2607,7 +3367,7 @@ var StringDecoder;
 var createReadableStreamAsyncIterator;
 var from;
 
-__nccwpck_require__(2150)(Readable, Stream);
+__nccwpck_require__(9294)(Readable, Stream);
 
 var errorOrDestroy = destroyImpl.errorOrDestroy;
 var kProxyEvents = ['error', 'close', 'destroy', 'pause', 'resume'];
@@ -2624,7 +3384,7 @@ function prependListener(emitter, event, fn) {
 }
 
 function ReadableState(options, stream, isDuplex) {
-  Duplex = Duplex || __nccwpck_require__(914);
+  Duplex = Duplex || __nccwpck_require__(1314);
   options = options || {}; // Duplex streams are both readable and writable, but share
   // the same options object.
   // However, some cases require setting options to different
@@ -2680,14 +3440,14 @@ function ReadableState(options, stream, isDuplex) {
   this.encoding = null;
 
   if (options.encoding) {
-    if (!StringDecoder) StringDecoder = __nccwpck_require__(7734)/* .StringDecoder */ .s;
+    if (!StringDecoder) StringDecoder = (__nccwpck_require__(3122)/* .StringDecoder */ .s);
     this.decoder = new StringDecoder(options.encoding);
     this.encoding = options.encoding;
   }
 }
 
 function Readable(options) {
-  Duplex = Duplex || __nccwpck_require__(914);
+  Duplex = Duplex || __nccwpck_require__(1314);
   if (!(this instanceof Readable)) return new Readable(options); // Checking for a Stream.Duplex instance is faster here instead of inside
   // the ReadableState constructor, at least with V8 6.5
 
@@ -2842,7 +3602,7 @@ Readable.prototype.isPaused = function () {
 
 
 Readable.prototype.setEncoding = function (enc) {
-  if (!StringDecoder) StringDecoder = __nccwpck_require__(7734)/* .StringDecoder */ .s;
+  if (!StringDecoder) StringDecoder = (__nccwpck_require__(3122)/* .StringDecoder */ .s);
   var decoder = new StringDecoder(enc);
   this._readableState.decoder = decoder; // If setEncoding(null), decoder.encoding equals utf8
 
@@ -3526,7 +4286,7 @@ Readable.prototype.wrap = function (stream) {
 if (typeof Symbol === 'function') {
   Readable.prototype[Symbol.asyncIterator] = function () {
     if (createReadableStreamAsyncIterator === undefined) {
-      createReadableStreamAsyncIterator = __nccwpck_require__(5229);
+      createReadableStreamAsyncIterator = __nccwpck_require__(4644);
     }
 
     return createReadableStreamAsyncIterator(this);
@@ -3628,7 +4388,7 @@ function endReadableNT(state, stream) {
 if (typeof Symbol === 'function') {
   Readable.from = function (iterable, opts) {
     if (from === undefined) {
-      from = __nccwpck_require__(169);
+      from = __nccwpck_require__(3142);
     }
 
     return from(Readable, iterable, opts);
@@ -3645,7 +4405,7 @@ function indexOf(xs, x) {
 
 /***/ }),
 
-/***/ 576:
+/***/ 9326:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -3714,15 +4474,15 @@ function indexOf(xs, x) {
 
 module.exports = Transform;
 
-var _require$codes = __nccwpck_require__(583)/* .codes */ .q,
+var _require$codes = (__nccwpck_require__(8706)/* .codes */ .q),
     ERR_METHOD_NOT_IMPLEMENTED = _require$codes.ERR_METHOD_NOT_IMPLEMENTED,
     ERR_MULTIPLE_CALLBACK = _require$codes.ERR_MULTIPLE_CALLBACK,
     ERR_TRANSFORM_ALREADY_TRANSFORMING = _require$codes.ERR_TRANSFORM_ALREADY_TRANSFORMING,
     ERR_TRANSFORM_WITH_LENGTH_0 = _require$codes.ERR_TRANSFORM_WITH_LENGTH_0;
 
-var Duplex = __nccwpck_require__(914);
+var Duplex = __nccwpck_require__(1314);
 
-__nccwpck_require__(2150)(Transform, Duplex);
+__nccwpck_require__(9294)(Transform, Duplex);
 
 function afterTransform(er, data) {
   var ts = this._transformState;
@@ -3853,7 +4613,7 @@ function done(stream, er, data) {
 
 /***/ }),
 
-/***/ 8549:
+/***/ 3592:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -3916,17 +4676,17 @@ Writable.WritableState = WritableState;
 /*<replacement>*/
 
 var internalUtil = {
-  deprecate: __nccwpck_require__(5362)
+  deprecate: __nccwpck_require__(8739)
 };
 /*</replacement>*/
 
 /*<replacement>*/
 
-var Stream = __nccwpck_require__(6268);
+var Stream = __nccwpck_require__(2883);
 /*</replacement>*/
 
 
-var Buffer = __nccwpck_require__(4293).Buffer;
+var Buffer = (__nccwpck_require__(4300).Buffer);
 
 var OurUint8Array = global.Uint8Array || function () {};
 
@@ -3938,12 +4698,12 @@ function _isUint8Array(obj) {
   return Buffer.isBuffer(obj) || obj instanceof OurUint8Array;
 }
 
-var destroyImpl = __nccwpck_require__(64);
+var destroyImpl = __nccwpck_require__(4515);
 
-var _require = __nccwpck_require__(3813),
+var _require = __nccwpck_require__(256),
     getHighWaterMark = _require.getHighWaterMark;
 
-var _require$codes = __nccwpck_require__(583)/* .codes */ .q,
+var _require$codes = (__nccwpck_require__(8706)/* .codes */ .q),
     ERR_INVALID_ARG_TYPE = _require$codes.ERR_INVALID_ARG_TYPE,
     ERR_METHOD_NOT_IMPLEMENTED = _require$codes.ERR_METHOD_NOT_IMPLEMENTED,
     ERR_MULTIPLE_CALLBACK = _require$codes.ERR_MULTIPLE_CALLBACK,
@@ -3955,12 +4715,12 @@ var _require$codes = __nccwpck_require__(583)/* .codes */ .q,
 
 var errorOrDestroy = destroyImpl.errorOrDestroy;
 
-__nccwpck_require__(2150)(Writable, Stream);
+__nccwpck_require__(9294)(Writable, Stream);
 
 function nop() {}
 
 function WritableState(options, stream, isDuplex) {
-  Duplex = Duplex || __nccwpck_require__(914);
+  Duplex = Duplex || __nccwpck_require__(1314);
   options = options || {}; // Duplex streams are both readable and writable, but share
   // the same options object.
   // However, some cases require setting options to different
@@ -4086,7 +4846,7 @@ if (typeof Symbol === 'function' && Symbol.hasInstance && typeof Function.protot
 }
 
 function Writable(options) {
-  Duplex = Duplex || __nccwpck_require__(914); // Writable ctor is applied to Duplexes, too.
+  Duplex = Duplex || __nccwpck_require__(1314); // Writable ctor is applied to Duplexes, too.
   // `realHasInstance` is necessary because using plain `instanceof`
   // would return false, as no `_writableState` property is attached.
   // Trying to use the custom `instanceof` for Writable here will also break the
@@ -4557,7 +5317,7 @@ Writable.prototype._destroy = function (err, cb) {
 
 /***/ }),
 
-/***/ 5229:
+/***/ 4644:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -4567,7 +5327,7 @@ var _Object$setPrototypeO;
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var finished = __nccwpck_require__(1604);
+var finished = __nccwpck_require__(9120);
 
 var kLastResolve = Symbol('lastResolve');
 var kLastReject = Symbol('lastReject');
@@ -4771,7 +5531,7 @@ module.exports = createReadableStreamAsyncIterator;
 
 /***/ }),
 
-/***/ 2726:
+/***/ 4829:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -4789,10 +5549,10 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var _require = __nccwpck_require__(4293),
+var _require = __nccwpck_require__(4300),
     Buffer = _require.Buffer;
 
-var _require2 = __nccwpck_require__(1669),
+var _require2 = __nccwpck_require__(3837),
     inspect = _require2.inspect;
 
 var custom = inspect && inspect.custom || 'inspect';
@@ -4988,7 +5748,7 @@ function () {
 
 /***/ }),
 
-/***/ 64:
+/***/ 4515:
 /***/ ((module) => {
 
 "use strict";
@@ -5100,7 +5860,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1604:
+/***/ 9120:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -5108,7 +5868,7 @@ module.exports = {
 // permission from the author, Mathias Buus (@mafintosh).
 
 
-var ERR_STREAM_PREMATURE_CLOSE = __nccwpck_require__(583)/* .codes.ERR_STREAM_PREMATURE_CLOSE */ .q.ERR_STREAM_PREMATURE_CLOSE;
+var ERR_STREAM_PREMATURE_CLOSE = (__nccwpck_require__(8706)/* .codes.ERR_STREAM_PREMATURE_CLOSE */ .q.ERR_STREAM_PREMATURE_CLOSE);
 
 function once(callback) {
   var called = false;
@@ -5211,7 +5971,7 @@ module.exports = eos;
 
 /***/ }),
 
-/***/ 169:
+/***/ 3142:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -5227,7 +5987,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var ERR_INVALID_ARG_TYPE = __nccwpck_require__(583)/* .codes.ERR_INVALID_ARG_TYPE */ .q.ERR_INVALID_ARG_TYPE;
+var ERR_INVALID_ARG_TYPE = (__nccwpck_require__(8706)/* .codes.ERR_INVALID_ARG_TYPE */ .q.ERR_INVALID_ARG_TYPE);
 
 function from(Readable, iterable, opts) {
   var iterator;
@@ -5282,7 +6042,7 @@ module.exports = from;
 
 /***/ }),
 
-/***/ 7866:
+/***/ 3961:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -5301,7 +6061,7 @@ function once(callback) {
   };
 }
 
-var _require$codes = __nccwpck_require__(583)/* .codes */ .q,
+var _require$codes = (__nccwpck_require__(8706)/* .codes */ .q),
     ERR_MISSING_ARGS = _require$codes.ERR_MISSING_ARGS,
     ERR_STREAM_DESTROYED = _require$codes.ERR_STREAM_DESTROYED;
 
@@ -5320,7 +6080,7 @@ function destroyer(stream, reading, writing, callback) {
   stream.on('close', function () {
     closed = true;
   });
-  if (eos === undefined) eos = __nccwpck_require__(1604);
+  if (eos === undefined) eos = __nccwpck_require__(9120);
   eos(stream, {
     readable: reading,
     writable: writing
@@ -5386,13 +6146,13 @@ module.exports = pipeline;
 
 /***/ }),
 
-/***/ 3813:
+/***/ 256:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var ERR_INVALID_OPT_VALUE = __nccwpck_require__(583)/* .codes.ERR_INVALID_OPT_VALUE */ .q.ERR_INVALID_OPT_VALUE;
+var ERR_INVALID_OPT_VALUE = (__nccwpck_require__(8706)/* .codes.ERR_INVALID_OPT_VALUE */ .q.ERR_INVALID_OPT_VALUE);
 
 function highWaterMarkFrom(options, isDuplex, duplexKey) {
   return options.highWaterMark != null ? options.highWaterMark : isDuplex ? options[duplexKey] : null;
@@ -5420,48 +6180,48 @@ module.exports = {
 
 /***/ }),
 
-/***/ 6268:
+/***/ 2883:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-module.exports = __nccwpck_require__(2413);
+module.exports = __nccwpck_require__(2781);
 
 
 /***/ }),
 
-/***/ 3901:
+/***/ 1093:
 /***/ ((module, exports, __nccwpck_require__) => {
 
-var Stream = __nccwpck_require__(2413);
+var Stream = __nccwpck_require__(2781);
 if (process.env.READABLE_STREAM === 'disable' && Stream) {
   module.exports = Stream.Readable;
   Object.assign(module.exports, Stream);
   module.exports.Stream = Stream;
 } else {
-  exports = module.exports = __nccwpck_require__(7640);
+  exports = module.exports = __nccwpck_require__(2607);
   exports.Stream = Stream || exports;
   exports.Readable = exports;
-  exports.Writable = __nccwpck_require__(8549);
-  exports.Duplex = __nccwpck_require__(914);
-  exports.Transform = __nccwpck_require__(576);
-  exports.PassThrough = __nccwpck_require__(5140);
-  exports.finished = __nccwpck_require__(1604);
-  exports.pipeline = __nccwpck_require__(7866);
+  exports.Writable = __nccwpck_require__(3592);
+  exports.Duplex = __nccwpck_require__(1314);
+  exports.Transform = __nccwpck_require__(9326);
+  exports.PassThrough = __nccwpck_require__(3475);
+  exports.finished = __nccwpck_require__(9120);
+  exports.pipeline = __nccwpck_require__(3961);
 }
 
 
 /***/ }),
 
-/***/ 1128:
+/***/ 9570:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-module.exports = __nccwpck_require__(9846);
+module.exports = __nccwpck_require__(580);
 
 /***/ }),
 
-/***/ 9846:
+/***/ 580:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-var RetryOperation = __nccwpck_require__(3777);
+var RetryOperation = __nccwpck_require__(9827);
 
 exports.operation = function(options) {
   var timeouts = exports.timeouts(options);
@@ -5565,7 +6325,7 @@ exports.wrap = function(obj, options, methods) {
 
 /***/ }),
 
-/***/ 3777:
+/***/ 9827:
 /***/ ((module) => {
 
 function RetryOperation(timeouts, options) {
@@ -5730,12 +6490,12 @@ RetryOperation.prototype.mainError = function() {
 
 /***/ }),
 
-/***/ 582:
+/***/ 311:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
-var buffer = __nccwpck_require__(4293)
+var buffer = __nccwpck_require__(4300)
 var Buffer = buffer.Buffer
 
 // alternative to using Object.keys for old browsers
@@ -5802,7 +6562,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 
 /***/ }),
 
-/***/ 9990:
+/***/ 5039:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -5810,7 +6570,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 
 
 
-var buffer = __nccwpck_require__(4293)
+var buffer = __nccwpck_require__(4300)
 var Buffer = buffer.Buffer
 
 var safer = {}
@@ -5887,7 +6647,7 @@ module.exports = safer
 
 /***/ }),
 
-/***/ 1853:
+/***/ 7623:
 /***/ ((module) => {
 
 "use strict";
@@ -5919,7 +6679,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 9526:
+/***/ 7479:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -5929,11 +6689,11 @@ module.exports = {
 
 
 
-const { Client } = __nccwpck_require__(3961);
-const fs = __nccwpck_require__(5747);
-const concat = __nccwpck_require__(743);
-const promiseRetry = __nccwpck_require__(9360);
-const { join, parse } = __nccwpck_require__(5622);
+const { Client } = __nccwpck_require__(9535);
+const fs = __nccwpck_require__(7147);
+const concat = __nccwpck_require__(8300);
+const promiseRetry = __nccwpck_require__(8856);
+const { join, parse } = __nccwpck_require__(1017);
 const {
   fmtError,
   addTempListeners,
@@ -5944,8 +6704,8 @@ const {
   haveLocalAccess,
   haveLocalCreate,
   sleep,
-} = __nccwpck_require__(8481);
-const { errorCode } = __nccwpck_require__(1853);
+} = __nccwpck_require__(9227);
+const { errorCode } = __nccwpck_require__(7623);
 
 class SftpClient {
   constructor(clientName) {
@@ -7150,16 +7910,16 @@ module.exports = SftpClient;
 
 /***/ }),
 
-/***/ 8481:
+/***/ 9227:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const fs = __nccwpck_require__(5747);
-const path = __nccwpck_require__(5622);
+const fs = __nccwpck_require__(7147);
+const path = __nccwpck_require__(1017);
 
-const { errorCode } = __nccwpck_require__(1853);
+const { errorCode } = __nccwpck_require__(7623);
 
 /**
  * Generate a new Error object with a reformatted error message which
@@ -7505,7 +8265,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 6492:
+/***/ 8174:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -7515,12 +8275,12 @@ const {
   Duplex: DuplexStream,
   Readable: ReadableStream,
   Writable: WritableStream,
-} = __nccwpck_require__(2413);
+} = __nccwpck_require__(2781);
 
 const {
   CHANNEL_EXTENDED_DATATYPE: { STDERR },
-} = __nccwpck_require__(6157);
-const { bufferSlice } = __nccwpck_require__(514);
+} = __nccwpck_require__(9249);
+const { bufferSlice } = __nccwpck_require__(5346);
 
 const PACKET_SIZE = 32 * 1024;
 const MAX_WINDOW = 2 * 1024 * 1024;
@@ -7807,26 +8567,26 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1690:
+/***/ 2754:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const { Socket } = __nccwpck_require__(1631);
-const { Duplex } = __nccwpck_require__(2413);
-const { resolve } = __nccwpck_require__(5622);
-const { readFile } = __nccwpck_require__(5747);
-const { execFile, spawn } = __nccwpck_require__(3129);
+const { Socket } = __nccwpck_require__(1808);
+const { Duplex } = __nccwpck_require__(2781);
+const { resolve } = __nccwpck_require__(1017);
+const { readFile } = __nccwpck_require__(7147);
+const { execFile, spawn } = __nccwpck_require__(2081);
 
-const { isParsedKey, parseKey } = __nccwpck_require__(534);
+const { isParsedKey, parseKey } = __nccwpck_require__(9765);
 
 const {
   makeBufferParser,
   readUInt32BE,
   writeUInt32BE,
   writeUInt32LE,
-} = __nccwpck_require__(514);
+} = __nccwpck_require__(5346);
 
 function once(cb) {
   let called = false;
@@ -8938,7 +9698,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 4442:
+/***/ 3427:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -8952,10 +9712,10 @@ const {
   createHash,
   getHashes,
   randomFillSync,
-} = __nccwpck_require__(6417);
-const { Socket } = __nccwpck_require__(1631);
-const { lookup: dnsLookup } = __nccwpck_require__(881);
-const EventEmitter = __nccwpck_require__(8614);
+} = __nccwpck_require__(6113);
+const { Socket } = __nccwpck_require__(1808);
+const { lookup: dnsLookup } = __nccwpck_require__(9523);
+const EventEmitter = __nccwpck_require__(2361);
 const HASHES = getHashes();
 
 const {
@@ -8974,11 +9734,11 @@ const {
   SUPPORTED_KEX,
   SUPPORTED_MAC,
   SUPPORTED_SERVER_HOST_KEY,
-} = __nccwpck_require__(6157);
-const { init: cryptoInit } = __nccwpck_require__(3214);
-const Protocol = __nccwpck_require__(5203);
-const { parseKey } = __nccwpck_require__(534);
-const { SFTP } = __nccwpck_require__(8299);
+} = __nccwpck_require__(9249);
+const { init: cryptoInit } = __nccwpck_require__(8254);
+const Protocol = __nccwpck_require__(3581);
+const { parseKey } = __nccwpck_require__(9765);
+const { SFTP } = __nccwpck_require__(9190);
 const {
   bufferCopy,
   makeBufferParser,
@@ -8986,23 +9746,23 @@ const {
   readUInt32BE,
   sigSSHToASN1,
   writeUInt32BE,
-} = __nccwpck_require__(514);
+} = __nccwpck_require__(5346);
 
-const { AgentContext, createAgent, isAgent } = __nccwpck_require__(1690);
+const { AgentContext, createAgent, isAgent } = __nccwpck_require__(2754);
 const {
   Channel,
   MAX_WINDOW,
   PACKET_SIZE,
   windowAdjust,
   WINDOW_THRESHOLD,
-} = __nccwpck_require__(6492);
+} = __nccwpck_require__(8174);
 const {
   ChannelManager,
   generateAlgorithmList,
   isWritable,
   onChannelOpenFailure,
   onCHANNEL_CLOSE,
-} = __nccwpck_require__(2620);
+} = __nccwpck_require__(4008);
 
 const bufferParser = makeBufferParser();
 const sigParser = makeBufferParser();
@@ -10960,15 +11720,15 @@ module.exports = Client;
 
 /***/ }),
 
-/***/ 2641:
+/***/ 2093:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const { Agent: HttpAgent } = __nccwpck_require__(8605);
-const { Agent: HttpsAgent } = __nccwpck_require__(7211);
-const { connect: tlsConnect } = __nccwpck_require__(4016);
+const { Agent: HttpAgent } = __nccwpck_require__(3685);
+const { Agent: HttpsAgent } = __nccwpck_require__(5687);
+const { connect: tlsConnect } = __nccwpck_require__(4404);
 
 let Client;
 
@@ -10988,7 +11748,7 @@ for (const ctor of [HttpAgent, HttpsAgent]) {
       const dstPort = options.port;
 
       if (Client === undefined)
-        Client = __nccwpck_require__(4442);
+        Client = __nccwpck_require__(3427);
 
       const client = new Client();
       let triedForward = false;
@@ -11052,7 +11812,7 @@ function decorateStream(stream, ctor, options) {
 
 /***/ }),
 
-/***/ 3961:
+/***/ 9535:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -11065,30 +11825,30 @@ const {
   CygwinAgent,
   OpenSSHAgent,
   PageantAgent,
-} = __nccwpck_require__(1690);
+} = __nccwpck_require__(2754);
 const {
   SSHTTPAgent: HTTPAgent,
   SSHTTPSAgent: HTTPSAgent,
-} = __nccwpck_require__(2641);
-const { parseKey } = __nccwpck_require__(534);
+} = __nccwpck_require__(2093);
+const { parseKey } = __nccwpck_require__(9765);
 const {
   flagsToString,
   OPEN_MODE,
   STATUS_CODE,
   stringToFlags,
-} = __nccwpck_require__(8299);
+} = __nccwpck_require__(9190);
 
 module.exports = {
   AgentProtocol,
   BaseAgent,
   createAgent,
-  Client: __nccwpck_require__(4442),
+  Client: __nccwpck_require__(3427),
   CygwinAgent,
   HTTPAgent,
   HTTPSAgent,
   OpenSSHAgent,
   PageantAgent,
-  Server: __nccwpck_require__(7148),
+  Server: __nccwpck_require__(2421),
   utils: {
     parseKey,
     sftp: {
@@ -11103,7 +11863,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 5203:
+/***/ 3581:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -11147,26 +11907,26 @@ module.exports = {
 
 
 
-const { inspect } = __nccwpck_require__(1669);
+const { inspect } = __nccwpck_require__(3837);
 
-const { bindingAvailable, NullCipher, NullDecipher } = __nccwpck_require__(3214);
+const { bindingAvailable, NullCipher, NullDecipher } = __nccwpck_require__(8254);
 const {
   COMPAT_CHECKS,
   DISCONNECT_REASON,
   MESSAGE,
   SIGNALS,
   TERMINAL_MODE,
-} = __nccwpck_require__(6157);
+} = __nccwpck_require__(9249);
 const {
   DEFAULT_KEXINIT,
   KexInit,
   kexinit,
   onKEXPayload,
-} = __nccwpck_require__(4359);
+} = __nccwpck_require__(7945);
 const {
   parseKey,
-} = __nccwpck_require__(534);
-const MESSAGE_HANDLERS = __nccwpck_require__(6023);
+} = __nccwpck_require__(9765);
+const MESSAGE_HANDLERS = __nccwpck_require__(1955);
 const {
   bufferCopy,
   bufferFill,
@@ -11174,15 +11934,15 @@ const {
   convertSignature,
   sendPacket,
   writeUInt32BE,
-} = __nccwpck_require__(514);
+} = __nccwpck_require__(5346);
 const {
   PacketReader,
   PacketWriter,
   ZlibPacketReader,
   ZlibPacketWriter,
-} = __nccwpck_require__(4556);
+} = __nccwpck_require__(2212);
 
-const MODULE_VER = __nccwpck_require__(6447)/* .version */ .i8;
+const MODULE_VER = (__nccwpck_require__(6674)/* .version */ .i8);
 
 const VALID_DISCONNECT_REASONS = new Map(
   Object.values(DISCONNECT_REASON).map((n) => [n, 1])
@@ -13188,20 +13948,20 @@ module.exports = Protocol;
 
 /***/ }),
 
-/***/ 8299:
+/***/ 9190:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const EventEmitter = __nccwpck_require__(8614);
-const fs = __nccwpck_require__(5747);
+const EventEmitter = __nccwpck_require__(2361);
+const fs = __nccwpck_require__(7147);
 const { constants } = fs;
 const {
   Readable: ReadableStream,
   Writable: WritableStream
-} = __nccwpck_require__(2413);
-const { inherits, isDate } = __nccwpck_require__(1669);
+} = __nccwpck_require__(2781);
+const { inherits, isDate } = __nccwpck_require__(3837);
 
 const FastBuffer = Buffer[Symbol.species];
 
@@ -13210,7 +13970,7 @@ const {
   bufferSlice,
   makeBufferParser,
   writeUInt32BE,
-} = __nccwpck_require__(514);
+} = __nccwpck_require__(5346);
 
 const ATTR = {
   SIZE: 0x00000001,
@@ -16516,7 +17276,7 @@ const {
   ERR_INVALID_ARG_TYPE,
   ERR_OUT_OF_RANGE,
   validateNumber
-} = __nccwpck_require__(4712);
+} = __nccwpck_require__(8984);
 
 const kMinPoolSpace = 128;
 
@@ -16974,20 +17734,20 @@ module.exports = {
 
 /***/ }),
 
-/***/ 6157:
+/***/ 9249:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const crypto = __nccwpck_require__(6417);
+const crypto = __nccwpck_require__(6113);
 
 let cpuInfo;
 try {
-  cpuInfo = __nccwpck_require__(398)();
+  cpuInfo = __nccwpck_require__(7792)();
 } catch {}
 
-const { bindingAvailable } = __nccwpck_require__(3214);
+const { bindingAvailable } = __nccwpck_require__(8254);
 
 const eddsaSupported = (() => {
   if (typeof crypto.sign === 'function'
@@ -17324,7 +18084,7 @@ module.exports.DISCONNECT_REASON_BY_VALUE =
 
 /***/ }),
 
-/***/ 3214:
+/***/ 8254:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -17338,9 +18098,9 @@ module.exports.DISCONNECT_REASON_BY_VALUE =
 
 const {
   createCipheriv, createDecipheriv, createHmac, randomFillSync, timingSafeEqual
-} = __nccwpck_require__(6417);
+} = __nccwpck_require__(6113);
 
-const { readUInt32BE, writeUInt32BE } = __nccwpck_require__(514);
+const { readUInt32BE, writeUInt32BE } = __nccwpck_require__(5346);
 
 const FastBuffer = Buffer[Symbol.species];
 const MAX_SEQNO = 2 ** 32 - 1;
@@ -17357,7 +18117,7 @@ let AESGCMDecipher;
 let ChaChaPolyDecipher;
 let GenericDecipher;
 try {
-  binding = __nccwpck_require__(4582);
+  binding = __nccwpck_require__(124);
   ({ AESGCMCipher, ChaChaPolyCipher, GenericCipher,
      AESGCMDecipher, ChaChaPolyDecipher, GenericDecipher } = binding);
 } catch {}
@@ -18911,7 +19671,7 @@ module.exports = {
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
       try {
-        POLY1305_WASM_MODULE = await __nccwpck_require__(1267)();
+        POLY1305_WASM_MODULE = await __nccwpck_require__(4025)();
         POLY1305_RESULT_MALLOC = POLY1305_WASM_MODULE._malloc(16);
         poly1305_auth = POLY1305_WASM_MODULE.cwrap(
           'poly1305_auth',
@@ -18934,7 +19694,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1267:
+/***/ 4025:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 
@@ -18947,7 +19707,7 @@ function(createPoly1305) {
 
 
 var b;b||(b=typeof createPoly1305 !== 'undefined' ? createPoly1305 : {});var q,r;b.ready=new Promise(function(a,c){q=a;r=c});var u={},w;for(w in b)b.hasOwnProperty(w)&&(u[w]=b[w]);var x="object"===typeof window,y="function"===typeof importScripts,z="object"===typeof process&&"object"===typeof process.versions&&"string"===typeof process.versions.node,B="",C,D,E,F,G;
-if(z)B=y?__nccwpck_require__(5622).dirname(B)+"/":__dirname+"/",C=function(a,c){var d=H(a);if(d)return c?d:d.toString();F||(F=__nccwpck_require__(5747));G||(G=__nccwpck_require__(5622));a=G.normalize(a);return F.readFileSync(a,c?null:"utf8")},E=function(a){a=C(a,!0);a.buffer||(a=new Uint8Array(a));assert(a.buffer);return a},D=function(a,c,d){var e=H(a);e&&c(e);F||(F=__nccwpck_require__(5747));G||(G=__nccwpck_require__(5622));a=G.normalize(a);F.readFile(a,function(f,l){f?d(f):c(l.buffer)})},1<process.argv.length&&process.argv[1].replace(/\\/g,"/"),process.argv.slice(2),
+if(z)B=y?(__nccwpck_require__(1017).dirname)(B)+"/":__dirname+"/",C=function(a,c){var d=H(a);if(d)return c?d:d.toString();F||(F=__nccwpck_require__(7147));G||(G=__nccwpck_require__(1017));a=G.normalize(a);return F.readFileSync(a,c?null:"utf8")},E=function(a){a=C(a,!0);a.buffer||(a=new Uint8Array(a));assert(a.buffer);return a},D=function(a,c,d){var e=H(a);e&&c(e);F||(F=__nccwpck_require__(7147));G||(G=__nccwpck_require__(1017));a=G.normalize(a);F.readFile(a,function(f,l){f?d(f):c(l.buffer)})},1<process.argv.length&&process.argv[1].replace(/\\/g,"/"),process.argv.slice(2),
 b.inspect=function(){return"[Emscripten Module object]"};else if(x||y)y?B=self.location.href:"undefined"!==typeof document&&document.currentScript&&(B=document.currentScript.src),_scriptDir&&(B=_scriptDir),0!==B.indexOf("blob:")?B=B.substr(0,B.lastIndexOf("/")+1):B="",C=function(a){try{var c=new XMLHttpRequest;c.open("GET",a,!1);c.send(null);return c.responseText}catch(f){if(a=H(a)){c=[];for(var d=0;d<a.length;d++){var e=a[d];255<e&&(ba&&assert(!1,"Character code "+e+" ("+String.fromCharCode(e)+")  at offset "+
 d+" not in 0x00-0xFF."),e&=255);c.push(String.fromCharCode(e))}return c.join("")}throw f;}},y&&(E=function(a){try{var c=new XMLHttpRequest;c.open("GET",a,!1);c.responseType="arraybuffer";c.send(null);return new Uint8Array(c.response)}catch(d){if(a=H(a))return a;throw d;}}),D=function(a,c,d){var e=new XMLHttpRequest;e.open("GET",a,!0);e.responseType="arraybuffer";e.onload=function(){if(200==e.status||0==e.status&&e.response)c(e.response);else{var f=H(a);f?c(f.buffer):d()}};e.onerror=d;e.send(null)};
 b.print||console.log.bind(console);var I=b.printErr||console.warn.bind(console);for(w in u)u.hasOwnProperty(w)&&(b[w]=u[w]);u=null;var J;b.wasmBinary&&(J=b.wasmBinary);var noExitRuntime=b.noExitRuntime||!0;"object"!==typeof WebAssembly&&K("no native wasm support detected");var L,M=!1;function assert(a,c){a||K("Assertion failed: "+c)}function N(a){var c=b["_"+a];assert(c,"Cannot call unknown function "+a+", make sure it is exported");return c}
@@ -18981,7 +19741,7 @@ else {}
 
 /***/ }),
 
-/***/ 6023:
+/***/ 1955:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -18989,8 +19749,8 @@ else {}
 
 const MESSAGE_HANDLERS = new Array(256);
 [
-  __nccwpck_require__(4359).HANDLERS,
-  __nccwpck_require__(4409),
+  (__nccwpck_require__(7945).HANDLERS),
+  __nccwpck_require__(4348),
 ].forEach((handlers) => {
   // eslint-disable-next-line prefer-const
   for (let [type, handler] of Object.entries(handlers)) {
@@ -19005,7 +19765,7 @@ module.exports = MESSAGE_HANDLERS;
 
 /***/ }),
 
-/***/ 4409:
+/***/ 4348:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -19017,18 +19777,18 @@ const {
   doFatalError,
   sigSSHToASN1,
   writeUInt32BE,
-} = __nccwpck_require__(514);
+} = __nccwpck_require__(5346);
 
 const {
   CHANNEL_OPEN_FAILURE,
   COMPAT,
   MESSAGE,
   TERMINAL_MODE,
-} = __nccwpck_require__(6157);
+} = __nccwpck_require__(9249);
 
 const {
   parseKey,
-} = __nccwpck_require__(534);
+} = __nccwpck_require__(9765);
 
 const TERMINAL_MODE_BY_VALUE =
   Array.from(Object.entries(TERMINAL_MODE))
@@ -20227,7 +20987,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 4359:
+/***/ 7945:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -20242,9 +21002,9 @@ const {
   diffieHellman,
   generateKeyPairSync,
   randomFillSync,
-} = __nccwpck_require__(6417);
+} = __nccwpck_require__(6113);
 
-const { Ber } = __nccwpck_require__(6316);
+const { Ber } = __nccwpck_require__(7713);
 
 const {
   COMPAT,
@@ -20256,14 +21016,14 @@ const {
   DEFAULT_COMPRESSION,
   DISCONNECT_REASON,
   MESSAGE,
-} = __nccwpck_require__(6157);
+} = __nccwpck_require__(9249);
 const {
   CIPHER_INFO,
   createCipher,
   createDecipher,
   MAC_INFO,
-} = __nccwpck_require__(3214);
-const { parseDERKey } = __nccwpck_require__(534);
+} = __nccwpck_require__(8254);
+const { parseDERKey } = __nccwpck_require__(9765);
 const {
   bufferFill,
   bufferParser,
@@ -20272,13 +21032,13 @@ const {
   FastBuffer,
   sigSSHToASN1,
   writeUInt32BE,
-} = __nccwpck_require__(514);
+} = __nccwpck_require__(5346);
 const {
   PacketReader,
   PacketWriter,
   ZlibPacketReader,
   ZlibPacketWriter,
-} = __nccwpck_require__(4556);
+} = __nccwpck_require__(2212);
 
 let MESSAGE_HANDLERS;
 
@@ -21973,7 +22733,7 @@ function onKEXPayload(state, payload) {
     case MESSAGE.UNIMPLEMENTED:
     case MESSAGE.DEBUG:
       if (!MESSAGE_HANDLERS)
-        MESSAGE_HANDLERS = __nccwpck_require__(6023);
+        MESSAGE_HANDLERS = __nccwpck_require__(1955);
       return MESSAGE_HANDLERS[type](this, payload);
     case MESSAGE.KEXINIT:
       if (!state.firstPacket) {
@@ -22066,7 +22826,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 534:
+/***/ 9765:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -22086,21 +22846,21 @@ const {
   getCiphers,
   sign: sign_,
   verify: verify_,
-} = __nccwpck_require__(6417);
+} = __nccwpck_require__(6113);
 const supportedOpenSSLCiphers = getCiphers();
 
-const { Ber } = __nccwpck_require__(6316);
-const bcrypt_pbkdf = __nccwpck_require__(8585).pbkdf;
+const { Ber } = __nccwpck_require__(7713);
+const bcrypt_pbkdf = (__nccwpck_require__(6048).pbkdf);
 
-const { CIPHER_INFO } = __nccwpck_require__(3214);
-const { eddsaSupported, SUPPORTED_CIPHER } = __nccwpck_require__(6157);
+const { CIPHER_INFO } = __nccwpck_require__(8254);
+const { eddsaSupported, SUPPORTED_CIPHER } = __nccwpck_require__(9249);
 const {
   bufferSlice,
   makeBufferParser,
   readString,
   readUInt32BE,
   writeUInt32BE,
-} = __nccwpck_require__(514);
+} = __nccwpck_require__(5346);
 
 const SYM_HASH_ALGO = Symbol('Hash Algorithm');
 const SYM_PRIV_PEM = Symbol('Private key PEM');
@@ -23555,14 +24315,14 @@ module.exports = {
 
 /***/ }),
 
-/***/ 4712:
+/***/ 8984:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const assert = __nccwpck_require__(2357);
-const { inspect } = __nccwpck_require__(1669);
+const assert = __nccwpck_require__(9491);
+const { inspect } = __nccwpck_require__(3837);
 
 // Only use this for integers! Decimal numbers do not work with this function.
 function addNumericalSeparator(val) {
@@ -23678,13 +24438,13 @@ exports.validateNumber = function validateNumber(value, name) {
 
 /***/ }),
 
-/***/ 514:
+/***/ 5346:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const Ber = __nccwpck_require__(6316).Ber;
+const Ber = (__nccwpck_require__(7713).Ber);
 
 let DISCONNECT_REASON;
 
@@ -23855,7 +24615,7 @@ module.exports = {
   doFatalError: (protocol, msg, level, reason) => {
     let err;
     if (DISCONNECT_REASON === undefined)
-      ({ DISCONNECT_REASON } = __nccwpck_require__(514));
+      ({ DISCONNECT_REASON } = __nccwpck_require__(5346));
     if (msg instanceof Error) {
       // doFatalError(protocol, err[, reason])
       err = msg;
@@ -24042,13 +24802,13 @@ module.exports = {
 
 /***/ }),
 
-/***/ 4556:
+/***/ 2212:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const { kMaxLength } = __nccwpck_require__(4293);
+const { kMaxLength } = __nccwpck_require__(4300);
 const {
   createInflate,
   constants: {
@@ -24061,7 +24821,7 @@ const {
     Z_DEFAULT_WINDOWBITS,
     Z_PARTIAL_FLUSH,
   }
-} = __nccwpck_require__(8761);
+} = __nccwpck_require__(9796);
 const ZlibHandle = createInflate()._handle.constructor;
 
 function processCallback() {
@@ -24305,7 +25065,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 7148:
+/***/ 2421:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -24316,8 +25076,8 @@ module.exports = {
 //     immediate connection status checking
 
 
-const { Server: netServer } = __nccwpck_require__(1631);
-const EventEmitter = __nccwpck_require__(8614);
+const { Server: netServer } = __nccwpck_require__(1808);
+const EventEmitter = __nccwpck_require__(2361);
 const { listenerCount } = EventEmitter;
 
 const {
@@ -24334,13 +25094,13 @@ const {
   SUPPORTED_KEX,
   SUPPORTED_MAC,
   SUPPORTED_SERVER_HOST_KEY,
-} = __nccwpck_require__(6157);
-const { init: cryptoInit } = __nccwpck_require__(3214);
-const { KexInit } = __nccwpck_require__(4359);
-const { parseKey } = __nccwpck_require__(534);
-const Protocol = __nccwpck_require__(5203);
-const { SFTP } = __nccwpck_require__(8299);
-const { writeUInt32BE } = __nccwpck_require__(514);
+} = __nccwpck_require__(9249);
+const { init: cryptoInit } = __nccwpck_require__(8254);
+const { KexInit } = __nccwpck_require__(7945);
+const { parseKey } = __nccwpck_require__(9765);
+const Protocol = __nccwpck_require__(3581);
+const { SFTP } = __nccwpck_require__(9190);
+const { writeUInt32BE } = __nccwpck_require__(5346);
 
 const {
   Channel,
@@ -24348,7 +25108,7 @@ const {
   PACKET_SIZE,
   windowAdjust,
   WINDOW_THRESHOLD,
-} = __nccwpck_require__(6492);
+} = __nccwpck_require__(8174);
 
 const {
   ChannelManager,
@@ -24356,7 +25116,7 @@ const {
   isWritable,
   onChannelOpenFailure,
   onCHANNEL_CLOSE,
-} = __nccwpck_require__(2620);
+} = __nccwpck_require__(4008);
 
 const MAX_PENDING_AUTHS = 10;
 
@@ -25680,13 +26440,13 @@ module.exports.IncomingClient = Client;
 
 /***/ }),
 
-/***/ 2620:
+/***/ 4008:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const { SFTP } = __nccwpck_require__(8299);
+const { SFTP } = __nccwpck_require__(9190);
 
 const MAX_CHANNEL = 2 ** 32 - 1;
 
@@ -26024,7 +26784,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 7734:
+/***/ 3122:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -26053,7 +26813,7 @@ module.exports = {
 
 /*<replacement>*/
 
-var Buffer = __nccwpck_require__(582).Buffer;
+var Buffer = (__nccwpck_require__(311).Buffer);
 /*</replacement>*/
 
 var isEncoding = Buffer.isEncoding || function (encoding) {
@@ -26327,7 +27087,287 @@ function simpleEnd(buf) {
 
 /***/ }),
 
-/***/ 4245:
+/***/ 3357:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = __nccwpck_require__(2096);
+
+
+/***/ }),
+
+/***/ 2096:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+var net = __nccwpck_require__(1808);
+var tls = __nccwpck_require__(4404);
+var http = __nccwpck_require__(3685);
+var https = __nccwpck_require__(5687);
+var events = __nccwpck_require__(2361);
+var assert = __nccwpck_require__(9491);
+var util = __nccwpck_require__(3837);
+
+
+exports.httpOverHttp = httpOverHttp;
+exports.httpsOverHttp = httpsOverHttp;
+exports.httpOverHttps = httpOverHttps;
+exports.httpsOverHttps = httpsOverHttps;
+
+
+function httpOverHttp(options) {
+  var agent = new TunnelingAgent(options);
+  agent.request = http.request;
+  return agent;
+}
+
+function httpsOverHttp(options) {
+  var agent = new TunnelingAgent(options);
+  agent.request = http.request;
+  agent.createSocket = createSecureSocket;
+  agent.defaultPort = 443;
+  return agent;
+}
+
+function httpOverHttps(options) {
+  var agent = new TunnelingAgent(options);
+  agent.request = https.request;
+  return agent;
+}
+
+function httpsOverHttps(options) {
+  var agent = new TunnelingAgent(options);
+  agent.request = https.request;
+  agent.createSocket = createSecureSocket;
+  agent.defaultPort = 443;
+  return agent;
+}
+
+
+function TunnelingAgent(options) {
+  var self = this;
+  self.options = options || {};
+  self.proxyOptions = self.options.proxy || {};
+  self.maxSockets = self.options.maxSockets || http.Agent.defaultMaxSockets;
+  self.requests = [];
+  self.sockets = [];
+
+  self.on('free', function onFree(socket, host, port, localAddress) {
+    var options = toOptions(host, port, localAddress);
+    for (var i = 0, len = self.requests.length; i < len; ++i) {
+      var pending = self.requests[i];
+      if (pending.host === options.host && pending.port === options.port) {
+        // Detect the request to connect same origin server,
+        // reuse the connection.
+        self.requests.splice(i, 1);
+        pending.request.onSocket(socket);
+        return;
+      }
+    }
+    socket.destroy();
+    self.removeSocket(socket);
+  });
+}
+util.inherits(TunnelingAgent, events.EventEmitter);
+
+TunnelingAgent.prototype.addRequest = function addRequest(req, host, port, localAddress) {
+  var self = this;
+  var options = mergeOptions({request: req}, self.options, toOptions(host, port, localAddress));
+
+  if (self.sockets.length >= this.maxSockets) {
+    // We are over limit so we'll add it to the queue.
+    self.requests.push(options);
+    return;
+  }
+
+  // If we are under maxSockets create a new one.
+  self.createSocket(options, function(socket) {
+    socket.on('free', onFree);
+    socket.on('close', onCloseOrRemove);
+    socket.on('agentRemove', onCloseOrRemove);
+    req.onSocket(socket);
+
+    function onFree() {
+      self.emit('free', socket, options);
+    }
+
+    function onCloseOrRemove(err) {
+      self.removeSocket(socket);
+      socket.removeListener('free', onFree);
+      socket.removeListener('close', onCloseOrRemove);
+      socket.removeListener('agentRemove', onCloseOrRemove);
+    }
+  });
+};
+
+TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
+  var self = this;
+  var placeholder = {};
+  self.sockets.push(placeholder);
+
+  var connectOptions = mergeOptions({}, self.proxyOptions, {
+    method: 'CONNECT',
+    path: options.host + ':' + options.port,
+    agent: false,
+    headers: {
+      host: options.host + ':' + options.port
+    }
+  });
+  if (options.localAddress) {
+    connectOptions.localAddress = options.localAddress;
+  }
+  if (connectOptions.proxyAuth) {
+    connectOptions.headers = connectOptions.headers || {};
+    connectOptions.headers['Proxy-Authorization'] = 'Basic ' +
+        new Buffer(connectOptions.proxyAuth).toString('base64');
+  }
+
+  debug('making CONNECT request');
+  var connectReq = self.request(connectOptions);
+  connectReq.useChunkedEncodingByDefault = false; // for v0.6
+  connectReq.once('response', onResponse); // for v0.6
+  connectReq.once('upgrade', onUpgrade);   // for v0.6
+  connectReq.once('connect', onConnect);   // for v0.7 or later
+  connectReq.once('error', onError);
+  connectReq.end();
+
+  function onResponse(res) {
+    // Very hacky. This is necessary to avoid http-parser leaks.
+    res.upgrade = true;
+  }
+
+  function onUpgrade(res, socket, head) {
+    // Hacky.
+    process.nextTick(function() {
+      onConnect(res, socket, head);
+    });
+  }
+
+  function onConnect(res, socket, head) {
+    connectReq.removeAllListeners();
+    socket.removeAllListeners();
+
+    if (res.statusCode !== 200) {
+      debug('tunneling socket could not be established, statusCode=%d',
+        res.statusCode);
+      socket.destroy();
+      var error = new Error('tunneling socket could not be established, ' +
+        'statusCode=' + res.statusCode);
+      error.code = 'ECONNRESET';
+      options.request.emit('error', error);
+      self.removeSocket(placeholder);
+      return;
+    }
+    if (head.length > 0) {
+      debug('got illegal response body from proxy');
+      socket.destroy();
+      var error = new Error('got illegal response body from proxy');
+      error.code = 'ECONNRESET';
+      options.request.emit('error', error);
+      self.removeSocket(placeholder);
+      return;
+    }
+    debug('tunneling connection has established');
+    self.sockets[self.sockets.indexOf(placeholder)] = socket;
+    return cb(socket);
+  }
+
+  function onError(cause) {
+    connectReq.removeAllListeners();
+
+    debug('tunneling socket could not be established, cause=%s\n',
+          cause.message, cause.stack);
+    var error = new Error('tunneling socket could not be established, ' +
+                          'cause=' + cause.message);
+    error.code = 'ECONNRESET';
+    options.request.emit('error', error);
+    self.removeSocket(placeholder);
+  }
+};
+
+TunnelingAgent.prototype.removeSocket = function removeSocket(socket) {
+  var pos = this.sockets.indexOf(socket)
+  if (pos === -1) {
+    return;
+  }
+  this.sockets.splice(pos, 1);
+
+  var pending = this.requests.shift();
+  if (pending) {
+    // If we have pending requests and a socket gets closed a new one
+    // needs to be created to take over in the pool for the one that closed.
+    this.createSocket(pending, function(socket) {
+      pending.request.onSocket(socket);
+    });
+  }
+};
+
+function createSecureSocket(options, cb) {
+  var self = this;
+  TunnelingAgent.prototype.createSocket.call(self, options, function(socket) {
+    var hostHeader = options.request.getHeader('host');
+    var tlsOptions = mergeOptions({}, self.options, {
+      socket: socket,
+      servername: hostHeader ? hostHeader.replace(/:.*$/, '') : options.host
+    });
+
+    // 0 is dummy port for v0.6
+    var secureSocket = tls.connect(0, tlsOptions);
+    self.sockets[self.sockets.indexOf(socket)] = secureSocket;
+    cb(secureSocket);
+  });
+}
+
+
+function toOptions(host, port, localAddress) {
+  if (typeof host === 'string') { // since v0.10
+    return {
+      host: host,
+      port: port,
+      localAddress: localAddress
+    };
+  }
+  return host; // for v0.11 or later
+}
+
+function mergeOptions(target) {
+  for (var i = 1, len = arguments.length; i < len; ++i) {
+    var overrides = arguments[i];
+    if (typeof overrides === 'object') {
+      var keys = Object.keys(overrides);
+      for (var j = 0, keyLen = keys.length; j < keyLen; ++j) {
+        var k = keys[j];
+        if (overrides[k] !== undefined) {
+          target[k] = overrides[k];
+        }
+      }
+    }
+  }
+  return target;
+}
+
+
+var debug;
+if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
+  debug = function() {
+    var args = Array.prototype.slice.call(arguments);
+    if (typeof args[0] === 'string') {
+      args[0] = 'TUNNEL: ' + args[0];
+    } else {
+      args.unshift('TUNNEL:');
+    }
+    console.error.apply(console, args);
+  }
+} else {
+  debug = function() {};
+}
+exports.debug = debug; // for test
+
+
+/***/ }),
+
+/***/ 7307:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 (function(nacl) {
@@ -28706,7 +29746,7 @@ nacl.setPRNG = function(fn) {
     });
   } else if (true) {
     // Node.js.
-    crypto = __nccwpck_require__(6417);
+    crypto = __nccwpck_require__(6113);
     if (crypto && crypto.randomBytes) {
       nacl.setPRNG(function(x, n) {
         var i, v = crypto.randomBytes(n);
@@ -28722,7 +29762,7 @@ nacl.setPRNG = function(fn) {
 
 /***/ }),
 
-/***/ 3261:
+/***/ 4042:
 /***/ ((__unused_webpack_module, exports) => {
 
 var undefined = (void 0); // Paranoia
@@ -29359,7 +30399,7 @@ function packF32(v) { return packIEEE754(v, 8, 23); }
 
 /***/ }),
 
-/***/ 5362:
+/***/ 8739:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 
@@ -29367,12 +30407,12 @@ function packF32(v) { return packIEEE754(v, 8, 23); }
  * For Node.js, simply re-export the core `util.deprecate` function.
  */
 
-module.exports = __nccwpck_require__(1669).deprecate;
+module.exports = __nccwpck_require__(3837).deprecate;
 
 
 /***/ }),
 
-/***/ 398:
+/***/ 7792:
 /***/ ((module) => {
 
 module.exports = eval("require")("cpu-features");
@@ -29380,7 +30420,7 @@ module.exports = eval("require")("cpu-features");
 
 /***/ }),
 
-/***/ 2357:
+/***/ 9491:
 /***/ ((module) => {
 
 "use strict";
@@ -29388,7 +30428,7 @@ module.exports = require("assert");
 
 /***/ }),
 
-/***/ 4293:
+/***/ 4300:
 /***/ ((module) => {
 
 "use strict";
@@ -29396,7 +30436,7 @@ module.exports = require("buffer");
 
 /***/ }),
 
-/***/ 3129:
+/***/ 2081:
 /***/ ((module) => {
 
 "use strict";
@@ -29404,7 +30444,7 @@ module.exports = require("child_process");
 
 /***/ }),
 
-/***/ 6417:
+/***/ 6113:
 /***/ ((module) => {
 
 "use strict";
@@ -29412,7 +30452,7 @@ module.exports = require("crypto");
 
 /***/ }),
 
-/***/ 881:
+/***/ 9523:
 /***/ ((module) => {
 
 "use strict";
@@ -29420,7 +30460,7 @@ module.exports = require("dns");
 
 /***/ }),
 
-/***/ 8614:
+/***/ 2361:
 /***/ ((module) => {
 
 "use strict";
@@ -29428,7 +30468,7 @@ module.exports = require("events");
 
 /***/ }),
 
-/***/ 5747:
+/***/ 7147:
 /***/ ((module) => {
 
 "use strict";
@@ -29436,7 +30476,7 @@ module.exports = require("fs");
 
 /***/ }),
 
-/***/ 8605:
+/***/ 3685:
 /***/ ((module) => {
 
 "use strict";
@@ -29444,7 +30484,7 @@ module.exports = require("http");
 
 /***/ }),
 
-/***/ 7211:
+/***/ 5687:
 /***/ ((module) => {
 
 "use strict";
@@ -29452,7 +30492,7 @@ module.exports = require("https");
 
 /***/ }),
 
-/***/ 1631:
+/***/ 1808:
 /***/ ((module) => {
 
 "use strict";
@@ -29460,7 +30500,7 @@ module.exports = require("net");
 
 /***/ }),
 
-/***/ 2087:
+/***/ 2037:
 /***/ ((module) => {
 
 "use strict";
@@ -29468,7 +30508,7 @@ module.exports = require("os");
 
 /***/ }),
 
-/***/ 5622:
+/***/ 1017:
 /***/ ((module) => {
 
 "use strict";
@@ -29476,7 +30516,7 @@ module.exports = require("path");
 
 /***/ }),
 
-/***/ 2413:
+/***/ 2781:
 /***/ ((module) => {
 
 "use strict";
@@ -29484,7 +30524,7 @@ module.exports = require("stream");
 
 /***/ }),
 
-/***/ 4016:
+/***/ 4404:
 /***/ ((module) => {
 
 "use strict";
@@ -29492,7 +30532,7 @@ module.exports = require("tls");
 
 /***/ }),
 
-/***/ 1669:
+/***/ 3837:
 /***/ ((module) => {
 
 "use strict";
@@ -29500,11 +30540,19 @@ module.exports = require("util");
 
 /***/ }),
 
-/***/ 8761:
+/***/ 9796:
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("zlib");
+
+/***/ }),
+
+/***/ 6674:
+/***/ ((module) => {
+
+"use strict";
+module.exports = {"i8":"1.5.0"};
 
 /***/ })
 
@@ -29549,11 +30597,11 @@ module.exports = require("zlib");
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-const core = __nccwpck_require__(5127);
-const fs = __nccwpck_require__(5747);
-const path = __nccwpck_require__(5622);
+const core = __nccwpck_require__(8864);
+const fs = __nccwpck_require__(7147);
+const path = __nccwpck_require__(1017);
 
-let Client = __nccwpck_require__(9526);
+let Client = __nccwpck_require__(7479);
 let sftp = new Client();
 
 const host = core.getInput('host');
@@ -29578,6 +30626,7 @@ if (privateKeyIsFile == "true") {
 
 const localPath = core.getInput('localPath');
 const remotePath = core.getInput('remotePath');
+const additionalPaths = core.getInput('additionalPaths')
 
 sftp.connect({
     host: host,
@@ -29590,25 +30639,20 @@ sftp.connect({
 }).then(async () => {
     console.log("Connection established.");
     console.log("Current working directory: " + await sftp.cwd())
+    await processPath(localPath, remotePath) //TODO: Instead of localPath, remotePath use key/value to uplaod multiple files at once.
 
-    if (fs.lstatSync(localPath).isDirectory()) {
-        return sftp.uploadDir(localPath, remotePath);
-    } else {
-
-        var directory = await sftp.realPath(path.dirname(remotePath));
-        if (!(await sftp.exists(directory))) {
-            await sftp.mkdir(directory, true);
-            console.log("Created directories.");
+    const parsedAdditionalPaths = (() => {
+        try {
+            const parsedAdditionalPaths = JSON.parse(additionalPaths)
+            return Object.entries(parsedAdditionalPaths)
         }
-        
-        var modifiedPath = remotePath;
-        if (await sftp.exists(remotePath)) {
-            if ((await sftp.stat(remotePath)).isDirectory) {
-                var modifiedPath = modifiedPath + path.basename(localPath);
-            }
+        catch (e) {
+            throw "Error parsing addtionalPaths. Make sure it is a valid JSON object (key/ value pairs)."
         }
+    })()
 
-        return sftp.put(fs.createReadStream(localPath), modifiedPath);
+    for (const [local, remote] of parsedAdditionalPaths) {
+        await processPath(local, remote)
     }
 
 }).then(() => {
@@ -29619,6 +30663,28 @@ sftp.connect({
     process.exit(1);
 });
 
+async function processPath(local, remote) {
+    console.log("Uploading: " + local + " to " + remote)
+    if (fs.lstatSync(local).isDirectory()) {
+        return sftp.uploadDir(local, remote);
+    } else {
+
+        var directory = await sftp.realPath(path.dirname(remote));
+        if (!(await sftp.exists(directory))) {
+            await sftp.mkdir(directory, true);
+            console.log("Created directories.");
+        }
+
+        var modifiedPath = remote;
+        if (await sftp.exists(remote)) {
+            if ((await sftp.stat(remote)).isDirectory) {
+                var modifiedPath = modifiedPath + path.basename(local);
+            }
+        }
+
+        return sftp.put(fs.createReadStream(local), modifiedPath);
+    }
+}
 })();
 
 module.exports = __webpack_exports__;
