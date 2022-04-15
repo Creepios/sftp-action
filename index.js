@@ -51,6 +51,8 @@ sftp.connect({
             throw "Error parsing addtionalPaths. Make sure it is a valid JSON object (key/ value pairs)."
         }
     })()
+    console.log("debug exclude")
+    console.log(exclude)
     const parsedExclude = (() => {
         try {
             return JSON.parse(exclude)
