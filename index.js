@@ -41,7 +41,6 @@ sftp.connect({
 }).then(async () => {
     console.log("Connection established.");
     console.log("Current working directory: " + await sftp.cwd())
-    await processPath(localPath, remotePath, parsedExclude) //TODO: Instead of localPath, remotePath use key/value to uplaod multiple files at once.
 
     const parsedAdditionalPaths = (() => {
         try {
@@ -60,6 +59,8 @@ sftp.connect({
             throw "Error parsing exlcude. Make sure it is a valid Array of strings."
         }
     })()
+
+    await processPath(localPath, remotePath, parsedExclude) //TODO: Instead of localPath, remotePath use key/value to uplaod multiple files at once.
 
     for (const [local, remote] of parsedAdditionalPaths) {
         await processPath(local, remote, parsedExclude)
