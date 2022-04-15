@@ -41,6 +41,8 @@ sftp.connect({
 }).then(async () => {
     console.log("Connection established.");
     console.log("Current working directory: " + await sftp.cwd())
+    await processPath(localPath, remotePath) //TODO: Instead of localPath, remotePath use key/value to uplaod multiple files at once.
+
     const parsedAdditionalPaths = (() => {
         try {
             const parsedAdditionalPaths = JSON.parse(additionalPaths)
@@ -59,15 +61,9 @@ sftp.connect({
         }
     })()
 
-
-    let promisesList = [processPath(localPath, remotePath, parsedExclude )] 
-
-
-
-    parsedAdditionalPaths.forEach(([local, remote]) => {
-        promisesList.push(processPath(local, remote, parsedExclude))
-    })
-    return Promise.all(promisesList)
+    for (const [local, remote] of parsedAdditionalPaths) {
+        await processPath(local, remote, parsedExclude)
+    }
 
 }).then(() => {
     console.log("Upload finished.");
@@ -82,6 +78,7 @@ async function processPath(local, remote, exclude = []) {
 
     if (fs.lstatSync(local).isDirectory()) {
         return sftp.uploadDir(local, remote, (path, isDir) => {
+            console.log("Exclude path: " + path)
             return !exclude.includes(path)
         });
     } else {
