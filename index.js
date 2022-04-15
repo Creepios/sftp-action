@@ -87,8 +87,8 @@ async function processPath(local, remote, exclude = []) {
 
     if (fs.lstatSync(local).isDirectory()) {
         return sftp.uploadDir(local, remote, (path, isDir) => {
-            console.log("Exclude path: " + path)
-            return !exclude.includes(path)
+            console.log("Exclude path: " + path + " dir: " + isDir)
+            return true //!exclude.includes(path)
         });
     } else {
 
