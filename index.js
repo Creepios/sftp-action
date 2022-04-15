@@ -41,6 +41,11 @@ sftp.connect({
 }).then(async () => {
     console.log("Connection established.");
     console.log("Current working directory: " + await sftp.cwd())
+    console.log("debug")
+    console.log(additionalPaths)
+    console.log("debug")
+    console.log(exclude)
+
 
     const parsedAdditionalPaths = (() => {
         try {
@@ -51,8 +56,7 @@ sftp.connect({
             throw "Error parsing addtionalPaths. Make sure it is a valid JSON object (key/ value pairs)."
         }
     })()
-    console.log("debug exclude")
-    console.log(exclude)
+   
     const parsedExclude = (() => {
         try {
             return JSON.parse(exclude)
