@@ -53,6 +53,7 @@ sftp.connect({
             return Object.entries(parsedAdditionalPaths)
         }
         catch (e) {
+            console.log(e)
             throw "Error parsing addtionalPaths. Make sure it is a valid JSON object (key/ value pairs)."
         }
     })()
@@ -62,6 +63,7 @@ sftp.connect({
             return JSON.parse(exclude)
         }
         catch (e) {
+            console.log(e)
             throw "Error parsing exlcude. Make sure it is a valid Array of strings."
         }
     })()
