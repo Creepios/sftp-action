@@ -49,6 +49,10 @@ inputs:
     description: 'Exclude files and directories if uplaoding a dirctory'
     required: false
     default: '[]'
+  debug:
+    required: false
+    description: 'Enable to see logs.'
+    default: false
     
 runs:
   using: 'node12'

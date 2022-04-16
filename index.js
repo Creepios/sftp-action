@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 let Client = require('ssh2-sftp-client');
+const { debuglog } = require('util');
 let sftp = new Client();
 
 const host = core.getInput('host');
@@ -29,6 +30,10 @@ const localPath = core.getInput('localPath');
 const remotePath = core.getInput('remotePath');
 const additionalPaths = core.getInput('additionalPaths')
 const exclude = core.getInput('exclude')
+const debug = core.getInput('debug')
+
+
+const debugLog = debug ? console.log : () => { }
 
 sftp.connect({
     host: host,
@@ -41,11 +46,6 @@ sftp.connect({
 }).then(async () => {
     console.log("Connection established.");
     console.log("Current working directory: " + await sftp.cwd())
-    console.log("debug")
-    console.log(additionalPaths)
-    console.log("debug")
-    console.log(exclude)
-
 
     const parsedAdditionalPaths = (() => {
         try {
@@ -57,7 +57,7 @@ sftp.connect({
             throw "Error parsing addtionalPaths. Make sure it is a valid JSON object (key/ value pairs)."
         }
     })()
-   
+
     const parsedExclude = (() => {
         try {
             return JSON.parse(exclude)
@@ -87,15 +87,16 @@ async function processPath(local, remote, exclude = []) {
 
     if (fs.lstatSync(local).isDirectory()) {
         return sftp.uploadDir(local, remote, (path, isDir) => {
-            console.log("Exclude path: " + path + " dir: " + isDir)
-            return !exclude.includes(path)
+            const isUploaded = !exclude.includes(path)
+            debugLog("Path: " + path + " dir: " + isDir + ". Uploaded: " + isUploaded)
+            return isUploaded
         });
     } else {
 
         var directory = await sftp.realPath(path.dirname(remote));
         if (!(await sftp.exists(directory))) {
             await sftp.mkdir(directory, true);
-            console.log("Created directories.");
+            console.log("Created directory. " + directory);
         }
 
         var modifiedPath = remote;
