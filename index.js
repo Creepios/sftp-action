@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 let Client = require('ssh2-sftp-client');
-const { debuglog } = require('util');
+
 let sftp = new Client();
 
 const host = core.getInput('host');
@@ -33,7 +33,7 @@ const exclude = core.getInput('exclude')
 const debug = core.getInput('debug')
 
 
-const debugLog = debug ? console.log : () => { }
+const debugLog = debug === "true" ? console.log : () => { }
 
 sftp.connect({
     host: host,
