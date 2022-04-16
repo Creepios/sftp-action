@@ -32,8 +32,10 @@ const additionalPaths = core.getInput('additionalPaths')
 const exclude = core.getInput('exclude')
 const debug = core.getInput('debug')
 
+console.log(debug)
 
 const debugLog = debug === "true" ? console.log : () => { }
+
 
 sftp.connect({
     host: host,

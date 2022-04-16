@@ -30718,7 +30718,7 @@ const fs = __nccwpck_require__(5747);
 const path = __nccwpck_require__(5622);
 
 let Client = __nccwpck_require__(7551);
-const { debuglog } = __nccwpck_require__(1669);
+
 let sftp = new Client();
 
 const host = core.getInput('host');
@@ -30747,8 +30747,10 @@ const additionalPaths = core.getInput('additionalPaths')
 const exclude = core.getInput('exclude')
 const debug = core.getInput('debug')
 
+console.log(debug)
 
-const debugLog = debug ? console.log : () => { }
+const debugLog = debug === "true" ? console.log : () => { }
+
 
 sftp.connect({
     host: host,
