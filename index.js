@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 let Client = require('ssh2-sftp-client');
+
 let sftp = new Client();
 
 const host = core.getInput('host');
@@ -28,6 +29,11 @@ if (privateKeyIsFile == "true") {
 const localPath = core.getInput('localPath');
 const remotePath = core.getInput('remotePath');
 const additionalPaths = core.getInput('additionalPaths')
+const exclude = core.getInput('exclude')
+const debug = core.getInput('debug')
+
+const debugLog = debug === "true" ? console.log : () => { }
+
 
 sftp.connect({
     host: host,
@@ -40,7 +46,6 @@ sftp.connect({
 }).then(async () => {
     console.log("Connection established.");
     console.log("Current working directory: " + await sftp.cwd())
-    await processPath(localPath, remotePath) //TODO: Instead of localPath, remotePath use key/value to uplaod multiple files at once.
 
     const parsedAdditionalPaths = (() => {
         try {
@@ -48,12 +53,25 @@ sftp.connect({
             return Object.entries(parsedAdditionalPaths)
         }
         catch (e) {
+            console.log(e)
             throw "Error parsing addtionalPaths. Make sure it is a valid JSON object (key/ value pairs)."
         }
     })()
 
+    const parsedExclude = (() => {
+        try {
+            return JSON.parse(exclude)
+        }
+        catch (e) {
+            console.log(e)
+            throw "Error parsing exlcude. Make sure it is a valid Array of strings."
+        }
+    })()
+
+    await processPath(localPath, remotePath, parsedExclude) //TODO: Instead of localPath, remotePath use key/value to uplaod multiple files at once.
+
     for (const [local, remote] of parsedAdditionalPaths) {
-        await processPath(local, remote)
+        await processPath(local, remote, parsedExclude)
     }
 
 }).then(() => {
@@ -64,16 +82,21 @@ sftp.connect({
     process.exit(1);
 });
 
-async function processPath(local, remote) {
+async function processPath(local, remote, exclude = []) {
     console.log("Uploading: " + local + " to " + remote)
+
     if (fs.lstatSync(local).isDirectory()) {
-        return sftp.uploadDir(local, remote);
+        return sftp.uploadDir(local, remote, (path, isDir) => {
+            const isUploaded = !exclude.includes(path)
+            debugLog("Path: " + path + " dir: " + isDir + ". Uploaded: " + isUploaded)
+            return isUploaded
+        });
     } else {
 
         var directory = await sftp.realPath(path.dirname(remote));
         if (!(await sftp.exists(directory))) {
             await sftp.mkdir(directory, true);
-            console.log("Created directories.");
+            console.log("Created directory. " + directory);
         }
 
         var modifiedPath = remote;

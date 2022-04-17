@@ -36,6 +36,18 @@ This action can (currently only) upload files and directories over sftp with ssh
 ### `additionalPaths`
 **Optional** Upload multiple files. type: JSON Object (key/ value). E.g '{"localPath":"remotePath"}'.
 
+### `exclude`
+**Optional** Exlcude files and directories when uploading a folder. 
+*note: exclude path must be full path..
+
+Example: 
+
+Upload dir: ./rootDir
+
+exlude: '["rootDir/subDir", "rootDir/subDir/file.txt"]'
+
+### `debug`
+**Optional** Debug logs.
 
 ## Example usage
 ```

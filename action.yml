@@ -45,6 +45,15 @@ inputs:
   passphrase: 
     description: 'Define a passphrase for encrypted private keys'
     required: false
+  exclude:
+    description: 'Exclude files and directories if uploading a dirctory'
+    required: false
+    default: '[]'
+  debug:
+    required: false
+    description: 'Enable to see logs.'
+    default: false
+    
 runs:
   using: 'node12'
   main: 'dist/index.js'
