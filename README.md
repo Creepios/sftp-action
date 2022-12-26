@@ -1,3 +1,5 @@
+## Currently, not active maintained, but working!
+
 # sftp-action
 This action can (currently only) upload files and directories over sftp with ssh login.
 
