@@ -16,7 +16,7 @@ const passphrase = core.getInput('passphrase');
 var privateKey = core.getInput('privateKey');
 
 core.setSecret(password);
-if (passphrase != undefined) {
+if (passphrase) {
     core.setSecret(passphrase);
 }
 
@@ -42,18 +42,20 @@ sftp.connect({
     console.log("Current working directory: " + await sftp.cwd())
     await processPath(localPath, remotePath) //TODO: Instead of localPath, remotePath use key/value to uplaod multiple files at once.
 
-    const parsedAdditionalPaths = (() => {
-        try {
-            const parsedAdditionalPaths = JSON.parse(additionalPaths)
-            return Object.entries(parsedAdditionalPaths)
-        }
-        catch (e) {
-            throw "Error parsing addtionalPaths. Make sure it is a valid JSON object (key/ value pairs)."
-        }
-    })()
+    if(additionalPaths != undefined && additionalPaths.length > 0) {
+        const parsedAdditionalPaths = (() => {
+            try {
+                const parsedAdditionalPaths = JSON.parse(additionalPaths)
+                return Object.entries(parsedAdditionalPaths)
+            }
+            catch (e) {
+                throw "Error parsing addtionalPaths. Make sure it is a valid JSON object (key/ value pairs)."
+            }
+        })()
 
-    for (const [local, remote] of parsedAdditionalPaths) {
-        await processPath(local, remote)
+        for (const [local, remote] of parsedAdditionalPaths) {
+            await processPath(local, remote)
+        }
     }
 
 }).then(() => {
@@ -69,7 +71,6 @@ async function processPath(local, remote) {
     if (fs.lstatSync(local).isDirectory()) {
         return sftp.uploadDir(local, remote);
     } else {
-
         var directory = await sftp.realPath(path.dirname(remote));
         if (!(await sftp.exists(directory))) {
             await sftp.mkdir(directory, true);
